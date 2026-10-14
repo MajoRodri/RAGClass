@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <a href="YOUR_GITHUB_PAGES_URL">
+  <a href="https://majorodri.github.io/RAGClass/">
     <img src="https://img.shields.io/badge/Live%20Site-GitHub%20Pages-brightgreen?style=for-the-badge&logo=github" alt="Live Site" />
   </a>
 </p>
