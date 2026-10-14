@@ -648,3 +648,30 @@ document.addEventListener('DOMContentLoaded', function () {
   const saved = localStorage.getItem('lang') || 'es';
   setLang(saved);
 });
+
+/* ── Hamburger menu ─────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function () {
+  const hamburger = document.getElementById('nav-hamburger');
+  const navLinks  = document.querySelector('.nav-links');
+  if (!hamburger || !navLinks) return;
+
+  hamburger.addEventListener('click', function (e) {
+    e.stopPropagation();
+    hamburger.classList.toggle('open');
+    navLinks.classList.toggle('open');
+  });
+
+  navLinks.querySelectorAll('a').forEach(function (link) {
+    link.addEventListener('click', function () {
+      hamburger.classList.remove('open');
+      navLinks.classList.remove('open');
+    });
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
+      hamburger.classList.remove('open');
+      navLinks.classList.remove('open');
+    }
+  });
+});
