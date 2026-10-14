@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Búsqueda Híbrida · Tableta Sheikah RAG</title>
+  <link rel="stylesheet" href="../assets/css/main.css" />
+</head>
+<body>
+  <div class="page-wrapper">
+
+    <!-- ── NAVIGATION ──────────────────────────────────────── -->
+    <nav class="nav">
+      <a class="nav-brand" href="../index.html">
+        <span class="nav-eye">⊙</span>
+        Tableta Sheikah · RAG
+      </a>
+      <ul class="nav-links">
+        <li><a href="../index.html" data-i18n="nav.home">Inicio</a></li>
+        <li><a href="hibrida.html" class="active" data-i18n="nav.hybrid">Híbrida</a></li>
+        <li><a href="reranking.html" data-i18n="nav.reranking">Reranking</a></li>
+        <li><a href="crag.html" data-i18n="nav.crag">CRAG</a></li>
+        <li><a href="tradeoffs.html" data-i18n="nav.tradeoffs">Trade-offs</a></li>
+        <li><a href="simulacion.html" data-i18n="nav.simulation">Simulación</a></li>
+        <li><a href="notebook.html" data-i18n="nav.notebook">Notebook</a></li>
+      </ul>
+      <button class="lang-toggle" onclick="setLang(document.documentElement.lang==='es'?'en':'es')" id="lang-btn">EN</button>
+    </nav>
+
+    <!-- ── PAGE HERO ───────────────────────────────────────── -->
+    <section class="page-hero">
+      <div class="container">
+        <nav class="breadcrumb">
+          <a href="../index.html" data-i18n="bc.home">Inicio</a>
+          <span class="sep">›</span>
+          <span class="current" data-i18n="bc.hybrid">Búsqueda Híbrida</span>
+        </nav>
+        <p class="hero-tag" data-i18n="hib.tag">Fase 01 · KPI: Hit Rate</p>
+        <h1 data-i18n="hib.h1">Búsqueda Híbrida</h1>
+        <p class="subtitle" data-i18n="hib.sub">Dense Retrieval + BM25 fusionados con RRF</p>
+        <p class="intro" data-i18n="hib.intro">
+          En un sistema RAG tradicional, solemos usar búsqueda vectorial (Dense Retrieval).
+          Esto transforma textos en coordenadas matemáticas (embeddings) para encontrar similitud
+          semántica. Es excelente para entender el contexto (si buscas "perro", encuentra "canino"),
+          pero es terrible para buscar códigos exactos, nombres propios o acrónimos.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── SECTION 1: PROBLEMA DEL RAG NAÏVE ──────────────── -->
+    <section class="section" style="padding-top: 0;">
+      <div class="container">
+
+        <div class="phase-header">
+          <span class="phase-watermark">01</span>
+          <span class="phase-title" data-i18n="hib.s1.title">El Problema del RAG Naïve</span>
+        </div>
+
+        <div class="panel">
+          <h3 data-i18n="hib.p1.h3">El punto ciego de la búsqueda vectorial</h3>
+          <p data-i18n-html="hib.p1.body">
+            Solo la búsqueda vectorial falla cuando la consulta contiene términos técnicos exactos:
+            nombres propios, códigos de producto, acrónimos. El vector semántico no sabe que
+            <strong>"JWT"</strong> es diferente de <strong>"token de autenticación"</strong>.
+            Ambos conceptos pueden estar cerca en el espacio semántico, pero en muchos contextos
+            técnicos la diferencia es crítica y la búsqueda vectorial no puede distinguirlos con
+            exactitud léxica.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── SECTION 2: LOS DOS MOTORES ─────────────────────── -->
+    <section class="section">
+      <div class="container">
+
+        <div class="phase-header">
+          <span class="phase-watermark">02</span>
+          <span class="phase-title" data-i18n="hib.s2.title">Los Dos Motores</span>
+        </div>
+
+        <div class="grid-2">
+
+          <div class="panel cyan-top">
+            <h3 data-i18n="hib.dense.h3">Búsqueda Densa (Vectorial)</h3>
+            <p style="margin-bottom: 1rem;" data-i18n-html="hib.dense.p">
+              Encuentra documentos por <strong>significado y contexto</strong>. Transforma tanto
+              la consulta como los documentos en vectores de alta dimensión usando un modelo de
+              embeddings, y calcula la similitud mediante distancia de coseno.
+            </p>
+            <div class="info-row">
+              <span class="ir-label" data-i18n="ir.mechanism">Mecanismo</span>
+              <span class="ir-val" data-i18n="hib.dense.mec">Modelo de embeddings + similitud coseno</span>
+            </div>
+            <div class="info-row">
+              <span class="ir-label" data-i18n="ir.strength">Fortaleza</span>
+              <span class="ir-val" data-i18n="hib.dense.str">Lenguaje natural, paráfrasis, sinónimos, contexto semántico</span>
+            </div>
+            <div class="info-row">
+              <span class="ir-label" data-i18n="ir.weakness">Debilidad</span>
+              <span class="ir-val" data-i18n="hib.dense.wk">Términos técnicos exactos, códigos, acrónimos, nombres propios</span>
+            </div>
+          </div>
+
+          <div class="panel cyan-top">
+            <h3 data-i18n="hib.sparse.h3">Búsqueda Dispersa (Lexical / BM25)</h3>
+            <p style="margin-bottom: 1rem;" data-i18n-html="hib.sparse.p">
+              Busca <strong>coincidencias exactas de palabras clave</strong>, como el Google clásico.
+              Utiliza el algoritmo TF-IDF mejorado (BM25) que pondera la frecuencia de términos
+              y la longitud del documento para calcular relevancia.
+            </p>
+            <div class="info-row">
+              <span class="ir-label" data-i18n="ir.mechanism">Mecanismo</span>
+              <span class="ir-val" data-i18n="hib.sparse.mec">TF-IDF mejorado (Best Match 25)</span>
+            </div>
+            <div class="info-row">
+              <span class="ir-label" data-i18n="ir.strength">Fortaleza</span>
+              <span class="ir-val" data-i18n="hib.sparse.str">Nombres propios, códigos, jerga técnica, coincidencias exactas</span>
+            </div>
+            <div class="info-row">
+              <span class="ir-label" data-i18n="ir.weakness">Debilidad</span>
+              <span class="ir-val" data-i18n="hib.sparse.wk">No entiende sinónimos ni contexto semántico</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── SECTION 3: FUSIÓN RRF ───────────────────────────── -->
+    <section class="section">
+      <div class="container">
+
+        <div class="phase-header">
+          <span class="phase-watermark">03</span>
+          <span class="phase-title" data-i18n="hib.s3.title">Fusión con RRF</span>
+        </div>
+
+        <div class="panel">
+          <h3 data-i18n="hib.rrf.h3">Reciprocal Rank Fusion (RRF)</h3>
+          <p style="margin-bottom: 1rem;" data-i18n-html="hib.rrf.body">
+            La clave está en cómo se <strong>combinan los rankings</strong> de ambos motores de
+            búsqueda. No basta con mezclar los resultados; hay que fusionarlos de forma inteligente.
+            RRF es el algoritmo estándar de la industria para este propósito.
+          </p>
+        </div>
+
+        <div class="formula">RRF(d) = Σ  1 / (k + rank_i(d))
+         i ∈ {vectorial, BM25}
+
+  k = 60  (constante de suavizado)</div>
+
+        <div class="highlight" data-i18n-html="hib.rrf.how">
+          <strong>Cómo funciona:</strong> Combina los rankings de ambos motores.
+          Cada documento recibe puntos según su posición en cada lista. Un documento
+          que aparece bien posicionado en <em>ambas</em> listas obtiene la puntuación más alta.
+          La constante <strong>k = 60</strong> suaviza el impacto de los documentos en las
+          primeras posiciones, evitando que un solo motor domine el resultado final. El ganador
+          es el documento que resulta relevante desde las dos perspectivas.
+        </div>
+
+        <div class="panel" style="margin-top: 1.5rem;">
+          <h3 data-i18n="hib.k60.h3">¿Por qué k = 60?</h3>
+          <p data-i18n-html="hib.k60.body">
+            La constante de suavizado <strong>k = 60</strong> es el valor empírico estándar
+            establecido en la literatura de Information Retrieval. Evita que los documentos
+            en posición 1 reciban una ventaja desproporcionada (1/1 = 1.0) frente a los que
+            están en posición 2 (1/2 = 0.5). Con k = 60, la diferencia se suaviza:
+            posición 1 → 1/61 ≈ 0.016, posición 2 → 1/62 ≈ 0.016. Esto hace que el ranking
+            sea más robusto y que los documentos consistentemente buenos en ambas listas
+            sean los ganadores claros.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── ZELDA ANALOGY ────────────────────────────────────── -->
+    <div class="container">
+      <div class="divider"></div>
+      <div class="zelda-box">
+        <div class="zelda-label" data-i18n="hib.zelda.lbl">⊙ Analogía Sheikah</div>
+        <img src="../assets/img/analogy-hibrida.jpg" alt="Analogía Búsqueda Híbrida" style="width:100%;border-radius:4px;margin-bottom:1rem;display:block;">
+        <p data-i18n="hib.zelda.p">
+          Link está buscando un santuario oculto. Si usa solo el Sensor Sheikah clásico
+          (Búsqueda Dispersa), el sensor pitará solo si está parado exactamente frente a
+          la puerta del santuario, pero no le dirá cómo llegar. Si usa el mapa de rumores
+          (Búsqueda Densa), sabrá que "hay un santuario en la montaña nevada", pero sin
+          ubicación exacta. La Búsqueda Híbrida es usar ambos a la vez: Link sabe el área
+          general por el significado (la montaña) y el sensor pita al detectar la señal
+          exacta (la puerta). No hay forma de perderse.
+        </p>
+      </div>
+    </div>
+
+    <!-- ── KPI SECTION ──────────────────────────────────────── -->
+    <section class="section">
+      <div class="container">
+
+        <div class="kpi-section">
+          <h3 data-i18n="hib.kpi.h3">Hit Rate (Tasa de Acierto)</h3>
+
+          <div class="kpi-entry">
+            <div class="kpi-entry-label" data-i18n="hib.kpi.lbl1">Definición Técnica</div>
+            <p data-i18n-html="hib.kpi.p1">
+              Mide el porcentaje de veces que el documento correcto aparece en
+              <strong>cualquier lugar</strong> dentro de los resultados recuperados (Top K).
+              La Búsqueda Híbrida debe acercarlo al 100%, asegurando que no se pierdan
+              documentos por usar palabras clave equivocadas. Un Hit Rate del 95% significa
+              que en 95 de cada 100 consultas, el documento correcto está en algún lugar del
+              Top K devuelto, independientemente de en qué posición esté.
+            </p>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="kpi-entry">
+            <div class="kpi-entry-label" data-i18n="hib.kpi.lbl2">Versión Sheikah</div>
+            <img src="../assets/img/kpi-hitrate.jpg" alt="KPI Hit Rate" style="width:100%;border-radius:4px;margin-bottom:1rem;display:block;">
+            <p data-i18n="hib.kpi.p2">
+              ¿Tiene Link flechas en su alforja, sí o no? No importa si están escondidas en
+              el fondo de la mochila, lo importante es que el juego las encontró y las trajo
+              a la memoria. Si la respuesta es "sí, las tiene", el Hit Rate marcó un punto.
+              Este es el indicador que mide la Búsqueda Híbrida: no importa dónde estén los
+              documentos, lo importante es que estén disponibles.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── PAGE NAV ─────────────────────────────────────────── -->
+    <div class="container">
+      <nav class="page-nav">
+        <span class="page-nav-spacer"></span>
+        <a href="reranking.html" data-i18n="hib.nav.next">Siguiente: Reranking →</a>
+      </nav>
+    </div>
+
+    <!-- ── FOOTER ───────────────────────────────────────────── -->
+    <footer class="footer">
+      <span class="footer-eye">⊙</span>
+      <p data-i18n="footer.text">Tableta Sheikah · Masterclass RAG · Técnicas de Optimización</p>
+    </footer>
+
+  </div><!-- /page-wrapper -->
+  <script src="../assets/js/i18n.js"></script>
+</body>
+</html>

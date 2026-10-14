@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CRAG · Tableta Sheikah RAG</title>
+  <link rel="stylesheet" href="../assets/css/main.css" />
+</head>
+<body>
+  <div class="page-wrapper">
+
+    <!-- ── NAVIGATION ──────────────────────────────────────── -->
+    <nav class="nav">
+      <a class="nav-brand" href="../index.html">
+        <span class="nav-eye">⊙</span>
+        Tableta Sheikah · RAG
+      </a>
+      <ul class="nav-links">
+        <li><a href="../index.html" data-i18n="nav.home">Inicio</a></li>
+        <li><a href="hibrida.html" data-i18n="nav.hybrid">Híbrida</a></li>
+        <li><a href="reranking.html" data-i18n="nav.reranking">Reranking</a></li>
+        <li><a href="crag.html" class="active" data-i18n="nav.crag">CRAG</a></li>
+        <li><a href="tradeoffs.html" data-i18n="nav.tradeoffs">Trade-offs</a></li>
+        <li><a href="simulacion.html" data-i18n="nav.simulation">Simulación</a></li>
+        <li><a href="notebook.html" data-i18n="nav.notebook">Notebook</a></li>
+      </ul>
+      <button class="lang-toggle" onclick="setLang(document.documentElement.lang==='es'?'en':'es')" id="lang-btn">EN</button>
+    </nav>
+
+    <!-- ── PAGE HERO ───────────────────────────────────────── -->
+    <section class="page-hero">
+      <div class="container">
+        <nav class="breadcrumb">
+          <a href="../index.html" data-i18n="bc.home">Inicio</a>
+          <span class="sep">›</span>
+          <span class="current" data-i18n="bc.crag">CRAG</span>
+        </nav>
+        <p class="hero-tag" data-i18n="crag.tag">Fase 03 · KPI: Faithfulness</p>
+        <h1 data-i18n="crag.h1">Corrective RAG (CRAG)</h1>
+        <p class="subtitle" data-i18n="crag.sub">El escudo anti-alucinaciones</p>
+        <p class="intro" data-i18n="crag.intro">
+          Incluso con Búsqueda Híbrida y Reranking, a veces la base de datos interna
+          simplemente no tiene la respuesta correcta, o los documentos recuperados están
+          obsoletos. En el RAG tradicional, el LLM intentaría responder de todos modos
+          usando esos documentos inútiles, provocando una alucinación, una respuesta
+          coherente pero completamente falsa.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── SECTION 1: CÓMO FUNCIONA CRAG ──────────────────── -->
+    <section class="section" style="padding-top: 0;">
+      <div class="container">
+
+        <div class="phase-header">
+          <span class="phase-watermark">01</span>
+          <span class="phase-title" data-i18n="crag.s1.title">Cómo Funciona CRAG</span>
+        </div>
+
+        <div class="panel">
+          <h3 data-i18n="crag.eval.h3">El evaluador automático</h3>
+          <p data-i18n-html="crag.eval.body">
+            CRAG añade un <strong>evaluador automático</strong> antes de generar la respuesta
+            final. Este evaluador, generalmente un LLM especializado actuando como juez,
+            analiza la relación entre la pregunta del usuario y los documentos recuperados,
+            clasificando el contexto recuperado en tres estados posibles antes de decidir
+            qué hacer a continuación.
+          </p>
+        </div>
+
+        <div class="grid-3" style="margin-top: 1.5rem;">
+
+          <div class="state-card correct">
+            <div class="state-title" data-i18n="crag.correct.title">✓ CORRECTO</div>
+            <p style="font-size: 0.9rem; color: var(--text-primary); line-height: 1.65; margin-top: 0.5rem;" data-i18n="crag.correct.body">
+              Los documentos recuperados responden correctamente la pregunta del usuario.
+              El contexto es relevante, actualizado y fiable.
+            </p>
+            <div class="state-action" data-i18n="crag.correct.action">→ Refinar y pasar directamente al LLM</div>
+          </div>
+
+          <div class="state-card incorrect">
+            <div class="state-title" data-i18n="crag.incorrect.title">✗ INCORRECTO</div>
+            <p style="font-size: 0.9rem; color: var(--text-primary); line-height: 1.65; margin-top: 0.5rem;" data-i18n="crag.incorrect.body">
+              Los documentos no sirven, están desactualizados o son completamente
+              irrelevantes para la pregunta formulada.
+            </p>
+            <div class="state-action" data-i18n="crag.incorrect.action">→ Bloquear contexto + activar búsqueda web externa</div>
+          </div>
+
+          <div class="state-card ambiguous">
+            <div class="state-title" data-i18n="crag.ambiguous.title">~ AMBIGUO</div>
+            <p style="font-size: 0.9rem; color: var(--text-primary); line-height: 1.65; margin-top: 0.5rem;" data-i18n="crag.ambiguous.body">
+              El contexto tiene algo de información útil, pero no toda la necesaria.
+              La respuesta sería incompleta con solo los documentos internos.
+            </p>
+            <div class="state-action" data-i18n="crag.ambiguous.action">→ Combinar documentos internos + búsqueda web</div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── SECTION 2: PIPELINE CRAG ───────────────────────── -->
+    <section class="section">
+      <div class="container">
+
+        <div class="phase-header">
+          <span class="phase-watermark">02</span>
+          <span class="phase-title" data-i18n="crag.s2.title">Pipeline CRAG Completo</span>
+        </div>
+
+        <div class="panel" style="margin-bottom: 1.5rem;">
+          <h3 data-i18n="crag.flow.h3">El flujo de decisión</h3>
+          <p data-i18n-html="crag.flow.body">
+            El evaluador de CRAG actúa como un guardián inteligente antes del LLM generador.
+            Su trabajo no es producir la respuesta final, sino garantizar que quien la produzca
+            (el LLM) tenga el mejor contexto posible. Puede conectarse a herramientas de búsqueda
+            web como <strong>Tavily</strong> o <strong>SerpAPI</strong> cuando los documentos
+            internos fallan.
+          </p>
+        </div>
+
+        <div class="formula">LLM_judge(query, doc) → &#123; CORRECTO | AMBIGUO | INCORRECTO &#125;
+
+CORRECTO   →  refine(doc)                        ──────────────────────► LLM
+AMBIGUO    →  refine(doc) + web_search(query)    ──────────────────────► LLM
+INCORRECTO →  web_search(query)                  ──────────────────────► LLM</div>
+
+        <div class="grid-2" style="margin-top: 1.5rem;">
+
+          <div class="panel">
+            <h3 data-i18n="crag.refine.h3">Refinar (refine)</h3>
+            <p data-i18n-html="crag.refine.body">
+              Cuando los documentos son útiles (CORRECTO o AMBIGUO), CRAG también
+              aplica un paso de <strong>refinamiento</strong>: elimina fragmentos
+              irrelevantes dentro de los documentos, comprime el contexto y extrae
+              solo las partes más pertinentes a la pregunta. Esto reduce el ruido
+              antes de pasarlo al LLM generador.
+            </p>
+          </div>
+
+          <div class="panel cyan-top">
+            <h3 data-i18n="crag.web.h3">Búsqueda Web Externa</h3>
+            <p data-i18n-html="crag.web.body">
+              Cuando CRAG determina que los documentos son INCORRECTOS o AMBIGUOS,
+              activa una búsqueda web en tiempo real. Herramientas como
+              <strong>Tavily AI Search</strong> o <strong>SerpAPI</strong> devuelven
+              resultados actualizados de la web, que se usan como contexto alternativo
+              o complementario para generar la respuesta final sin alucinaciones.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── ZELDA ANALOGY ────────────────────────────────────── -->
+    <div class="container">
+      <div class="divider"></div>
+      <div class="zelda-box">
+        <div class="zelda-label" data-i18n="crag.zelda.lbl">⊙ Analogía Sheikah</div>
+        <img src="../assets/img/analogy-crag.jpg" alt="Analogía CRAG" style="width:100%;border-radius:4px;margin-bottom:1rem;display:block;">
+        <p data-i18n="crag.zelda.p">
+          Link va a enfrentarse a un centaleón de fuego. Según sus "apuntes" (el contexto
+          recuperado), saca una espada de madera y un escudo de madera para luchar.
+          Justo antes de saltar a la batalla, el hada Navi (CRAG) analiza la situación y
+          grita: "¡Hey, Listen! Tu equipo de madera se va a quemar al instante". Navi
+          califica la estrategia de Link como "Incorrecta", le bloquea el uso de la madera
+          y abre automáticamente la guía de monstruos para indicarle que debe usar equipo
+          de hielo. Navi corrigió el error fatal antes de que ocurriera.
+        </p>
+      </div>
+    </div>
+
+    <!-- ── KPI SECTION ──────────────────────────────────────── -->
+    <section class="section">
+      <div class="container">
+
+        <div class="kpi-section">
+          <h3 data-i18n="crag.kpi.h3">Faithfulness (Fidelidad) / Ausencia de Alucinaciones</h3>
+
+          <div class="kpi-entry">
+            <div class="kpi-entry-label" data-i18n="crag.kpi.lbl1">Definición Técnica</div>
+            <p data-i18n-html="crag.kpi.p1">
+              Mide si la respuesta final del LLM está <strong>estrictamente basada en
+              el contexto proporcionado</strong>, sin inventar datos. Un Faithfulness de
+              1.0 significa que cada afirmación en la respuesta puede ser rastreada y
+              verificada en los documentos de contexto. CRAG impacta directamente aquí al
+              desechar documentos incorrectos antes de que el LLM los lea: si el LLM
+              nunca ve contexto incorrecto, no puede alucinar a partir de él.
+              Si el Faithfulness sube, significa que CRAG está actuando correctamente
+              como filtro y el modelo ya no inventa respuestas.
+            </p>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="kpi-entry">
+            <div class="kpi-entry-label" data-i18n="crag.kpi.lbl2">Versión Sheikah</div>
+            <img src="../assets/img/kpi-faithfulness.jpg" alt="KPI Faithfulness" style="width:100%;border-radius:4px;margin-bottom:1rem;display:block;">
+            <p data-i18n="crag.kpi.p2">
+              El Rey de Hyrule le pregunta a la Tableta Sheikah cómo derrotar a Ganon.
+              La tableta dice: "Lanzándole gallinas" (una alucinación). El Faithfulness
+              mide qué tan apegada a la historia real es la respuesta. CRAG detecta que
+              la táctica de las gallinas es mentira, borra ese dato, busca en la
+              enciclopedia hyliana y responde correctamente: "Con las Flechas de Luz".
+              Un Faithfulness de 1.0 = la Tableta Sheikah nunca miente.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── PAGE NAV ─────────────────────────────────────────── -->
+    <div class="container">
+      <nav class="page-nav">
+        <a href="reranking.html" data-i18n="crag.nav.prev">← Reranking</a>
+        <a href="tradeoffs.html" data-i18n="crag.nav.next">Siguiente: Trade-offs →</a>
+      </nav>
+    </div>
+
+    <!-- ── FOOTER ───────────────────────────────────────────── -->
+    <footer class="footer">
+      <span class="footer-eye">⊙</span>
+      <p data-i18n="footer.text">Tableta Sheikah · Masterclass RAG · Técnicas de Optimización</p>
+    </footer>
+
+  </div><!-- /page-wrapper -->
+  <script src="../assets/js/i18n.js"></script>
+</body>
+</html>

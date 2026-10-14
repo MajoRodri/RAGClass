@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tableta Sheikah · RAG Avanzado</title>
+  <link rel="stylesheet" href="assets/css/main.css" />
+</head>
+<body>
+  <div class="page-wrapper">
+
+    <!-- ── NAVIGATION ──────────────────────────────────────── -->
+    <nav class="nav">
+      <a class="nav-brand" href="index.html">
+        <span class="nav-eye">⊙</span>
+        Tableta Sheikah · RAG
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html" class="active" data-i18n="nav.home">Inicio</a></li>
+        <li><a href="pages/hibrida.html" data-i18n="nav.hybrid">Híbrida</a></li>
+        <li><a href="pages/reranking.html" data-i18n="nav.reranking">Reranking</a></li>
+        <li><a href="pages/crag.html" data-i18n="nav.crag">CRAG</a></li>
+        <li><a href="pages/tradeoffs.html" data-i18n="nav.tradeoffs">Trade-offs</a></li>
+        <li><a href="pages/simulacion.html" data-i18n="nav.simulation">Simulación</a></li>
+        <li><a href="pages/notebook.html" data-i18n="nav.notebook">Notebook</a></li>
+      </ul>
+      <button class="lang-toggle" onclick="setLang(document.documentElement.lang==='es'?'en':'es')" id="lang-btn">EN</button>
+    </nav>
+
+    <!-- ── HERO ────────────────────────────────────────────── -->
+    <section class="hero">
+      <div class="container">
+        <p class="hero-tag" data-i18n="hero.tag">Masterclass · Técnicas de Optimización</p>
+        <h1 class="hero-title" data-i18n-html="hero.title">
+          Técnicas <em>Avanzadas</em><br />de <em>RAG</em>
+        </h1>
+        <p class="hero-desc" data-i18n-html="hero.desc">
+          Un sistema RAG básico falla. Aprende las tres técnicas que lo hacen
+          infalible: <strong>Búsqueda Híbrida</strong>, <strong>Reranking</strong>
+          y <strong>Corrective RAG</strong>.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── PIPELINE FLOW ───────────────────────────────────── -->
+    <section class="section" style="padding-top: 0;">
+      <div class="container">
+        <div class="section-header">
+          <span class="s-tag cyan" data-i18n="pipeline.tag">Pipeline Completo</span>
+          <h2 data-i18n="pipeline.h2">El flujo de tres fases</h2>
+          <p data-i18n="pipeline.desc">Cada técnica refina la anterior, convirtiendo una pregunta en una respuesta precisa y confiable.</p>
+        </div>
+
+        <div class="pipeline-flow">
+          <div class="pipeline-card no-link">
+            <div class="p-num" data-i18n="pipeline.input.num">INPUT</div>
+            <div class="p-title" data-i18n="pipeline.input.title">Pregunta</div>
+            <div class="p-metric" data-i18n="pipeline.input.metric">Query del usuario</div>
+          </div>
+
+          <span class="pipeline-arrow">›</span>
+
+          <a class="pipeline-card" href="pages/hibrida.html">
+            <div class="p-num">01</div>
+            <div class="p-title" data-i18n="tc1.title">Búsqueda Híbrida</div>
+            <div class="p-metric" data-i18n="pipeline.p01.metric">KPI: Hit Rate</div>
+          </a>
+
+          <span class="pipeline-arrow">›</span>
+
+          <a class="pipeline-card" href="pages/reranking.html">
+            <div class="p-num">02</div>
+            <div class="p-title" data-i18n="tc2.title">Reranking</div>
+            <div class="p-metric" data-i18n="pipeline.p02.metric">KPI: MRR</div>
+          </a>
+
+          <span class="pipeline-arrow">›</span>
+
+          <a class="pipeline-card" href="pages/crag.html">
+            <div class="p-num">03</div>
+            <div class="p-title" data-i18n="tc3.title">CRAG</div>
+            <div class="p-metric" data-i18n="pipeline.p03.metric">KPI: Faithfulness</div>
+          </a>
+
+          <span class="pipeline-arrow">›</span>
+
+          <div class="pipeline-card no-link">
+            <div class="p-num" data-i18n="pipeline.output.num">OUTPUT</div>
+            <div class="p-title" data-i18n="pipeline.output.title">Respuesta</div>
+            <div class="p-metric" data-i18n="pipeline.output.metric">Precisa · Fiel</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="container"><div class="divider"></div></div>
+
+    <!-- ── THREE TECHNIQUES ────────────────────────────────── -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="s-tag gold" data-i18n="techniques.tag">Las Tres Técnicas</span>
+          <h2 data-i18n="techniques.h2">Del RAG básico al RAG infalible</h2>
+          <p data-i18n="techniques.desc">Cada técnica ataca un problema específico del pipeline. Juntas, forman un sistema robusto de recuperación y generación.</p>
+        </div>
+
+        <div class="grid-3">
+          <a class="technique-card" href="pages/hibrida.html">
+            <div class="tc-num" data-i18n="tc1.num">Fase 01 · KPI: Hit Rate</div>
+            <div class="tc-title" data-i18n="tc1.title">Búsqueda Híbrida</div>
+            <div class="tc-sub" data-i18n="tc1.sub">Dense Retrieval + BM25 + RRF</div>
+            <p data-i18n="tc1.body">
+              Fusiona la búsqueda semántica vectorial con la búsqueda léxica exacta de BM25.
+              Ningún documento relevante queda fuera, sin importar si la consulta usa
+              términos técnicos, acrónimos o lenguaje natural.
+            </p>
+            <div class="tc-arrow" data-i18n="tc1.arrow">Explorar →</div>
+          </a>
+
+          <a class="technique-card" href="pages/reranking.html">
+            <div class="tc-num" data-i18n="tc2.num">Fase 02 · KPI: MRR</div>
+            <div class="tc-title" data-i18n="tc2.title">Reranking</div>
+            <div class="tc-sub" data-i18n="tc2.sub">Cross-Encoder · Anti Lost-in-Middle</div>
+            <p data-i18n="tc2.body">
+              Un modelo Cross-Encoder actúa como juez minucioso: toma los Top-20 documentos
+              recuperados y los reordena con precisión quirúrgica, poniendo los más relevantes
+              en las primeras posiciones antes de pasarlos al LLM.
+            </p>
+            <div class="tc-arrow" data-i18n="tc2.arrow">Explorar →</div>
+          </a>
+
+          <a class="technique-card" href="pages/crag.html">
+            <div class="tc-num" data-i18n="tc3.num">Fase 03 · KPI: Faithfulness</div>
+            <div class="tc-title" data-i18n="tc3.title">Corrective RAG</div>
+            <div class="tc-sub" data-i18n="tc3.sub">Evaluador automático · Anti-alucinaciones</div>
+            <p data-i18n="tc3.body">
+              Añade un evaluador inteligente que clasifica el contexto recuperado como
+              Correcto, Ambiguo o Incorrecto, y activa búsqueda web externa cuando los
+              documentos internos no son suficientes.
+            </p>
+            <div class="tc-arrow" data-i18n="tc3.arrow">Explorar →</div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <div class="container"><div class="divider"></div></div>
+
+    <!-- ── TRADE-OFFS PREVIEW ───────────────────────────────── -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="s-tag" data-i18n="to.tag">Consideraciones Avanzadas</span>
+          <h2 data-i18n="to.h2">Trade-offs y Retos de Implementación</h2>
+          <p data-i18n="to.desc">La magia tiene un precio. Conoce los costes reales antes de desplegar en producción.</p>
+        </div>
+
+        <div class="grid-3">
+          <a class="tradeoff-card" href="pages/tradeoffs.html">
+            <div class="to-title" data-i18n="to1.title">Chunking y Calidad de Datos</div>
+            <p data-i18n="to1.body">
+              Garbage In, Garbage Out. Si los documentos están mal troceados o
+              desactualizados, el mejor algoritmo solo encontrará basura más rápido.
+            </p>
+          </a>
+
+          <a class="tradeoff-card" href="pages/tradeoffs.html">
+            <div class="to-title" data-i18n="to2.title">Latencia</div>
+            <p data-i18n="to2.body">
+              Cada fase añade milisegundos. CRAG puede detener el pipeline para consultar
+              APIs externas. La precisión cero-errores tiene un coste en velocidad.
+            </p>
+          </a>
+
+          <a class="tradeoff-card" href="pages/tradeoffs.html">
+            <div class="to-title" data-i18n="to3.title">Coste Computacional</div>
+            <p data-i18n="to3.body">
+              CRAG requiere un LLM-juez antes de cada respuesta, duplicando el consumo de
+              tokens. No todas las preguntas necesitan el pipeline completo.
+            </p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FOOTER ───────────────────────────────────────────── -->
+    <footer class="footer">
+      <span class="footer-eye">⊙</span>
+      <p data-i18n="footer.text">Tableta Sheikah · Masterclass RAG · Técnicas de Optimización</p>
+    </footer>
+
+  </div><!-- /page-wrapper -->
+  <script src="assets/js/i18n.js"></script>
+</body>
+</html>

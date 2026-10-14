@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulación · Tableta Sheikah RAG</title>
+  <link rel="stylesheet" href="../assets/css/main.css" />
+  <style>
+    .sim-hero { padding: 3rem 0 1.5rem; text-align: center; }
+
+    .scenario-bar {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.75rem; flex-wrap: wrap; margin: 1.5rem 0;
+    }
+    .scenario-label {
+      font-family: var(--font-mono); font-size: 0.6rem;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted);
+    }
+    .scenario-btn {
+      font-family: var(--font-mono); font-size: 0.72rem;
+      padding: 0.45rem 1.1rem; border-radius: 3px; cursor: pointer;
+      border: 1px solid var(--border-gold);
+      background: rgba(200,162,40,0.05); color: var(--text-muted);
+      transition: all 0.25s ease;
+    }
+    .scenario-btn:hover, .scenario-btn.active {
+      color: var(--gold-light); border-color: rgba(200,162,40,0.5);
+      background: rgba(200,162,40,0.1);
+    }
+
+    .query-display {
+      display: inline-flex; align-items: center; gap: 0.75rem;
+      background: rgba(0,0,0,0.5); border: 1px solid var(--border-cyan);
+      border-radius: 3px; padding: 0.85rem 1.5rem;
+      margin: 0 auto; max-width: 600px;
+    }
+    .q-label {
+      font-family: var(--font-mono); font-size: 0.58rem;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--cyan); opacity: 0.7; white-space: nowrap;
+    }
+    .q-text { font-family: var(--font-mono); font-size: 0.88rem; color: var(--text-bright); }
+
+    /* Step indicator */
+    .step-indicator {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0; margin: 2rem 0; flex-wrap: nowrap; overflow-x: auto;
+      padding-bottom: 0.5rem;
+    }
+    .step-dot { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
+    .step-dot-circle {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 2px solid var(--border-gold); background: var(--bg-card);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono); font-size: 0.7rem;
+      color: var(--text-muted); transition: all 0.3s ease; flex-shrink: 0;
+    }
+    .step-dot-circle.active {
+      border-color: var(--gold-light); background: rgba(200,162,40,0.15);
+      color: var(--gold-light); box-shadow: 0 0 12px rgba(200,162,40,0.3);
+    }
+    .step-dot-circle.done {
+      border-color: var(--success); background: rgba(0,255,136,0.1); color: var(--success);
+    }
+    .step-dot-label {
+      font-family: var(--font-mono); font-size: 0.55rem; letter-spacing: 1px;
+      color: var(--text-muted); text-transform: uppercase; white-space: nowrap;
+    }
+    .step-dot.active .step-dot-label { color: var(--gold-light); }
+    .step-dot.done   .step-dot-label { color: var(--success); }
+    .step-connector { width: 50px; height: 1px; background: var(--border-gold); flex-shrink: 0; }
+    .step-connector.done { background: var(--success); }
+
+    /* Labels */
+    .step-label-bar {
+      text-align: center; font-family: var(--font-mono);
+      font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--text-muted); margin: 1rem 0;
+    }
+    .step-label-bar span { color: var(--gold-light); }
+
+    .step-explain {
+      padding: 0.85rem 1.5rem; background: rgba(200,162,40,0.04);
+      border: 1px solid var(--border-gold); border-radius: 3px;
+      margin: 0.75rem 0; font-size: 0.85rem; color: var(--text-muted);
+      line-height: 1.65; text-align: center;
+    }
+    .step-explain strong { color: var(--gold-light); }
+
+    /* Columns */
+    .sim-columns {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0;
+    }
+    @media (max-width: 800px) { .sim-columns { grid-template-columns: 1fr; } }
+
+    .sim-col { display: flex; flex-direction: column; gap: 1rem; }
+
+    .sim-col-header {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.75rem 1.25rem; border-radius: 3px;
+    }
+    .sim-col-header.naive {
+      background: rgba(255,34,68,0.06); border: 1px solid rgba(255,34,68,0.25);
+    }
+    .sim-col-header.advanced {
+      background: rgba(74,222,128,0.06); border: 1px solid var(--border-cyan);
+    }
+    .sim-col-label { font-family: var(--font-heading); font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; }
+    .sim-col-label.naive { color: var(--danger); }
+    .sim-col-label.advanced { color: var(--cyan); }
+    .sim-col-badge {
+      font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 1px;
+      margin-left: auto; padding: 0.2rem 0.6rem; border-radius: 2px;
+    }
+    .sim-col-badge.naive  { color: var(--danger);  border: 1px solid rgba(255,34,68,0.3);  background: rgba(255,34,68,0.06); }
+    .sim-col-badge.advanced { color: var(--success); border: 1px solid rgba(0,255,136,0.3); background: rgba(0,255,136,0.06); }
+
+    /* Step card */
+    .step-card {
+      background: var(--bg-card); border: 1px solid var(--border-gold);
+      border-radius: 3px; overflow: hidden; animation: fadeInUp 0.35s ease; flex: 1;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .step-card-head {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.7rem 1.25rem; border-bottom: 1px solid var(--border-gold);
+      background: rgba(0,0,0,0.3);
+    }
+    .step-card-phase { font-family: var(--font-mono); font-size: 0.57rem; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); }
+    .step-card-title { font-family: var(--font-heading); font-size: 0.85rem; font-weight: 600; color: var(--gold-light); flex: 1; }
+    .step-status {
+      font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 1px;
+      padding: 0.2rem 0.6rem; border-radius: 2px;
+    }
+    .step-status.ok      { color: var(--success); border: 1px solid rgba(0,255,136,0.3);  background: rgba(0,255,136,0.06); }
+    .step-status.warn    { color: var(--warning); border: 1px solid rgba(255,170,34,0.3); background: rgba(255,170,34,0.06); }
+    .step-status.error   { color: var(--danger);  border: 1px solid rgba(255,34,68,0.3);  background: rgba(255,34,68,0.06); }
+    .step-status.neutral { color: var(--text-muted); border: 1px solid var(--border-gold); }
+    .step-card-body { padding: 1.25rem; }
+
+    /* Doc list */
+    .doc-list { display: flex; flex-direction: column; gap: 0.45rem; margin: 0.75rem 0; }
+    .doc-item {
+      display: flex; align-items: center; gap: 0.65rem;
+      padding: 0.5rem 0.85rem; border-radius: 2px;
+      border: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.25);
+    }
+    .doc-item.correct { border-color: rgba(0,255,136,0.35); background: rgba(0,255,136,0.05); }
+    .doc-item.wrong   { border-color: rgba(255,34,68,0.35);  background: rgba(255,34,68,0.05); }
+    .doc-item.dimmed  { opacity: 0.4; }
+    .doc-rank { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted); min-width: 22px; }
+    .doc-name { flex: 1; font-size: 0.83rem; color: var(--text-primary); }
+    .doc-score { font-family: var(--font-mono); font-size: 0.7rem; }
+    .doc-score.hi  { color: var(--success); }
+    .doc-score.mid { color: var(--cyan); }
+    .doc-score.lo  { color: var(--text-muted); }
+    .doc-badge { font-family: var(--font-mono); font-size: 0.57rem; letter-spacing: 1px; padding: 0.1rem 0.4rem; border-radius: 2px; }
+    .bd { color: var(--danger);  border: 1px solid rgba(255,34,68,0.35);  background: rgba(255,34,68,0.08); }
+    .bs { color: var(--success); border: 1px solid rgba(0,255,136,0.35); background: rgba(0,255,136,0.08); }
+    .bw { color: var(--warning); border: 1px solid rgba(255,170,34,0.3); background: rgba(255,170,34,0.08); }
+
+    /* Score table */
+    .stbl { width: 100%; border-collapse: collapse; font-size: 0.81rem; margin: 0.65rem 0; }
+    .stbl th { font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); padding: 0.28rem 0.5rem; text-align: left; border-bottom: 1px solid rgba(200,162,40,0.15); }
+    .stbl td { padding: 0.32rem 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text-primary); }
+    .stbl tr:last-child td { border-bottom: none; }
+    .shi { color: var(--success); font-family: var(--font-mono); font-weight: 700; }
+    .smi { color: var(--cyan);    font-family: var(--font-mono); }
+    .slo { color: var(--text-muted); font-family: var(--font-mono); }
+
+    /* Alert */
+    .abox {
+      padding: 0.85rem 1.1rem; border-radius: 3px;
+      display: flex; gap: 0.65rem; align-items: flex-start; margin: 0.75rem 0;
+    }
+    .abox.danger  { border: 1px solid rgba(255,34,68,0.38);  background: rgba(255,34,68,0.07); }
+    .abox.success { border: 1px solid rgba(0,255,136,0.38);  background: rgba(0,255,136,0.06); }
+    .abox.warn    { border: 1px solid rgba(255,170,34,0.35); background: rgba(255,170,34,0.06); }
+    .abox.info    { border: 1px solid var(--border-cyan);    background: rgba(74,222,128,0.04); }
+    .abox-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .abox-title { font-weight: 700; font-size: 0.86rem; margin-bottom: 0.25rem; }
+    .abox-title.d { color: var(--danger); }
+    .abox-title.s { color: var(--success); }
+    .abox-title.w { color: var(--warning); }
+    .abox-title.c { color: var(--cyan); }
+    .abox-text { font-size: 0.82rem; color: var(--text-primary); line-height: 1.6; }
+
+    /* CRAG score */
+    .crag-score {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 0.85rem 1.1rem; border-radius: 3px; margin: 0.75rem 0;
+    }
+    .crag-score.incorrect { border: 1px solid rgba(255,34,68,0.4);  background: rgba(255,34,68,0.07); }
+    .crag-score.ambiguous { border: 1px solid rgba(255,170,34,0.4); background: rgba(255,170,34,0.07); }
+    .crag-score.correct   { border: 1px solid rgba(0,255,136,0.4);  background: rgba(0,255,136,0.06); }
+    .crag-val { font-family: var(--font-mono); font-size: 1.5rem; font-weight: 700; line-height: 1; }
+    .crag-val.incorrect { color: var(--danger); }
+    .crag-val.ambiguous { color: var(--warning); }
+    .crag-val.correct   { color: var(--success); }
+    .crag-info { font-size: 0.83rem; line-height: 1.5; }
+    .crag-info strong { color: var(--text-bright); }
+    .crag-info small { font-family: var(--font-mono); font-size: 0.66rem; color: var(--text-muted); display: block; margin-top: 0.2rem; }
+
+    /* Context block */
+    .ctx-block {
+      background: rgba(0,0,0,0.5); border: 1px solid var(--border-cyan);
+      border-radius: 2px; padding: 0.75rem 1rem; margin: 0.75rem 0;
+      font-family: var(--font-mono); font-size: 0.73rem; color: var(--text-muted); line-height: 1.75;
+    }
+    .ctx-block .cl { font-size: 0.56rem; letter-spacing: 2px; text-transform: uppercase; color: var(--cyan); opacity: 0.6; margin-bottom: 0.35rem; }
+    .ctx-block .ct { color: var(--text-primary); }
+
+    /* Final answer */
+    .final-ans { border-radius: 3px; padding: 1.1rem 1.25rem; margin: 0.75rem 0; }
+    .final-ans.wrong   { border: 1px solid rgba(255,34,68,0.4);  background: rgba(255,34,68,0.06); }
+    .final-ans.correct { border: 1px solid rgba(0,255,136,0.4);  background: rgba(0,255,136,0.05); }
+    .final-ans-lbl { font-family: var(--font-heading); font-size: 0.6rem; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 0.65rem; }
+    .final-ans.wrong   .final-ans-lbl { color: var(--danger); }
+    .final-ans.correct .final-ans-lbl { color: var(--success); }
+    .final-ans-txt { font-size: 0.9rem; line-height: 1.7; color: var(--text-bright); }
+    .final-ans.wrong .final-ans-txt { text-decoration: line-through; color: var(--text-muted); }
+    .final-ans-note { font-family: var(--font-mono); font-size: 0.67rem; margin-top: 0.65rem; padding-top: 0.65rem; border-top: 1px solid rgba(255,255,255,0.07); }
+    .final-ans.wrong  .final-ans-note { color: var(--danger); }
+    .final-ans.correct .final-ans-note { color: var(--success); }
+
+    /* Metrics row */
+    .metrics-mini { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 1rem; }
+    .metric-chip {
+      flex: 1; min-width: 75px; text-align: center; padding: 0.55rem 0.5rem;
+      background: rgba(0,0,0,0.3); border: 1px solid var(--border-gold); border-radius: 3px;
+    }
+    .metric-val { display: block; font-family: var(--font-mono); font-size: 1rem; }
+    .metric-lbl { font-size: 0.62rem; color: var(--text-muted); margin-top: 0.15rem; }
+
+    /* Controls */
+    .control-bar {
+      display: flex; align-items: center; justify-content: center;
+      gap: 1rem; padding: 1.5rem 0 2rem; flex-wrap: wrap;
+    }
+    .btn-sim {
+      font-family: var(--font-heading); font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 2.5px; text-transform: uppercase;
+      padding: 0.7rem 2rem; border-radius: 3px; cursor: pointer; transition: all 0.25s ease; border: 1px solid;
+    }
+    .btn-sim.primary {
+      background: rgba(200,162,40,0.12); border-color: rgba(200,162,40,0.5); color: var(--gold-light);
+    }
+    .btn-sim.primary:hover:not(:disabled) {
+      background: rgba(200,162,40,0.22); box-shadow: 0 0 16px rgba(200,162,40,0.3);
+    }
+    .btn-sim.secondary {
+      background: transparent; border-color: rgba(200,162,40,0.2); color: var(--text-muted);
+    }
+    .btn-sim.secondary:hover { color: var(--gold-light); border-color: rgba(200,162,40,0.4); }
+    .btn-sim:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .empty-state {
+      text-align: center; padding: 2.5rem;
+      color: var(--text-muted); font-family: var(--font-mono); font-size: 0.78rem;
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <nav class="nav">
+    <a class="nav-brand" href="../index.html"><span class="nav-eye">⊙</span> Tableta Sheikah · RAG</a>
+    <ul class="nav-links">
+      <li><a href="../index.html" data-i18n="nav.home">Inicio</a></li>
+      <li><a href="hibrida.html" data-i18n="nav.hybrid">Híbrida</a></li>
+      <li><a href="reranking.html" data-i18n="nav.reranking">Reranking</a></li>
+      <li><a href="crag.html" data-i18n="nav.crag">CRAG</a></li>
+      <li><a href="tradeoffs.html" data-i18n="nav.tradeoffs">Trade-offs</a></li>
+      <li><a href="simulacion.html" class="active" data-i18n="nav.simulation">Simulación</a></li>
+      <li><a href="notebook.html" data-i18n="nav.notebook">Notebook</a></li>
+    </ul>
+    <button class="lang-toggle" onclick="setLang(document.documentElement.lang==='es'?'en':'es')" id="lang-btn">EN</button>
+  </nav>
+
+  <section class="sim-hero">
+    <div class="container">
+      <p class="hero-tag" data-i18n="sim.tag">Demo Interactiva · Paso a Paso</p>
+      <h1 class="hero-title" data-i18n-html="sim.h1">Simulación del <em>Pipeline RAG</em></h1>
+      <p class="hero-desc" data-i18n="sim.desc">Compara RAG tradicional vs pipeline avanzado en cada fase. Avanza a tu propio ritmo.</p>
+
+      <div class="scenario-bar">
+        <span class="scenario-label" data-i18n="sim.scenario.lbl">Escenario ›</span>
+        <button class="scenario-btn active" onclick="selectScenario(0,this)">Centaleón de Fuego</button>
+        <button class="scenario-btn" onclick="selectScenario(1,this)">Santuario del Glaciar</button>
+        <button class="scenario-btn" onclick="selectScenario(2,this)">La Espada Maestra</button>
+      </div>
+
+      <div class="query-display">
+        <span class="q-label">Query</span>
+        <span class="q-text" id="query-text">¿Cómo derrotar a un Centaleón de Fuego?</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+
+    <div class="step-indicator" id="step-indicator"></div>
+
+    <div class="step-label-bar" id="step-label-bar" data-i18n-html="sim.label.initial">
+      Presiona <span>"Iniciar Simulación"</span> para comenzar
+    </div>
+
+    <div class="step-explain" id="step-explain" style="display:none"></div>
+
+    <div class="sim-columns">
+      <div class="sim-col">
+        <div class="sim-col-header naive">
+          <span class="sim-col-label naive" data-i18n="sim.col.naive">✗ RAG Tradicional</span>
+          <span class="sim-col-badge naive" id="naive-badge" data-i18n="sim.badge.naive">Sin pipeline</span>
+        </div>
+        <div id="naive-content"><div class="step-card"><div class="empty-state"> Esperando inicio </div></div></div>
+      </div>
+      <div class="sim-col">
+        <div class="sim-col-header advanced">
+          <span class="sim-col-label advanced" data-i18n="sim.col.advanced">✓ RAG Avanzado</span>
+          <span class="sim-col-badge advanced" id="adv-badge" data-i18n="sim.badge.adv">Pipeline completo</span>
+        </div>
+        <div id="adv-content"><div class="step-card"><div class="empty-state"> Esperando inicio </div></div></div>
+      </div>
+    </div>
+
+    <div class="control-bar">
+      <button class="btn-sim secondary" id="btn-reset" onclick="resetSim()" style="display:none" data-i18n="sim.btn.reset">↺ Reiniciar</button>
+      <button class="btn-sim primary"   id="btn-next"  onclick="nextStep()" data-i18n="sim.btn.start">▶ Iniciar Simulación</button>
+    </div>
+
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <span class="footer-eye">⊙</span>
+        <span data-i18n="footer.text">Tableta Sheikah · Masterclass RAG · Técnicas de Optimización</span>
+      </div>
+    </div>
+  </footer>
+
+</div>
+<script src="../assets/js/i18n.js"></script>
+<script>
+/* ═══════════════════════ SCENARIOS ═══════════════════════════ */
+const SCENARIOS = [
+  {
+    query: '¿Cómo derrotar a un Centaleón de Fuego?',
+    steps: [
+      {
+        name:'Consulta', phase:'INPUT',
+        explain:'La misma pregunta entra en ambos sistemas. A partir de aquí los caminos divergen.',
+        naive:{phase:'INPUT',title:'Consulta recibida',status:'neutral',html:`
+          <div class="abox info"><span class="abox-icon">◈</span><div><div class="abox-title c">Query</div><div class="abox-text">"¿Cómo derrotar a un Centaleón de Fuego?"</div></div></div>
+          <p style="font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted);margin-top:.75rem;">Siguiente → búsqueda vectorial directa</p>`},
+        advanced:{phase:'INPUT',title:'Consulta recibida',status:'neutral',html:`
+          <div class="abox info"><span class="abox-icon">◈</span><div><div class="abox-title c">Query</div><div class="abox-text">"¿Cómo derrotar a un Centaleón de Fuego?"</div></div></div>
+          <p style="font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted);margin-top:.75rem;">Siguiente → Dense + BM25 en paralelo</p>`}
+      },
+      {
+        name:'Búsqueda', phase:'FASE 01',
+        explain:'<strong>El problema del RAG básico:</strong> Dense pone "Equipo de madera" en #1 porque semánticamente parece relevante para "combatir bestias de fuego". BM25 lo corrige encontrando "Centaleón de Fuego" como término exacto.',
+        naive:{phase:'FASE 01',title:'Dense Retrieval (solo vectorial)',status:'warn',html:`
+          <p style="font-size:.84rem;color:var(--text-muted);margin-bottom:.75rem;">Búsqueda por similitud semántica. El modelo no distingue si el documento es útil o peligroso.</p>
+          <div class="doc-list">
+            <div class="doc-item wrong"><span class="doc-rank">#1</span><span class="doc-name">Equipo de madera para bestias de fuego</span><span class="doc-score mid">0.82</span><span class="doc-badge bd">¡ERROR!</span></div>
+            <div class="doc-item"><span class="doc-rank">#2</span><span class="doc-name">El Centaleón de Fuego: Anatomía</span><span class="doc-score hi">0.79</span></div>
+            <div class="doc-item"><span class="doc-rank">#3</span><span class="doc-name">Recetas con ingredientes de fuego</span><span class="doc-score lo">0.71</span></div>
+          </div>
+          <div class="abox warn"><span class="abox-icon">▲</span><div><div class="abox-title w">Documento incorrecto en #1</div><div class="abox-text">El doc sobre "equipo de madera" subió al #1 porque parece semánticamente relevante. Pero la madera se quema con fuego.</div></div></div>`},
+        advanced:{phase:'FASE 01',title:'Búsqueda Híbrida: Dense + BM25 + RRF',status:'ok',html:`
+          <p style="font-size:.84rem;color:var(--text-muted);margin-bottom:.75rem;">Dos motores en paralelo. BM25 reconoce el término exacto "Centaleón de Fuego".</p>
+          <table class="stbl"><thead><tr><th>Documento</th><th>Dense</th><th>BM25</th><th>RRF</th></tr></thead><tbody>
+            <tr><td>Centaleón de Fuego: Anatomía</td><td class="smi">0.79</td><td class="shi">18.4</td><td class="shi">#1 ✓</td></tr>
+            <tr><td>Equipo de madera para bestias</td><td class="shi">0.82</td><td class="slo">3.1</td><td class="smi">#2</td></tr>
+            <tr><td>Recetas con ingredientes de fuego</td><td class="slo">0.71</td><td class="smi">11.2</td><td class="slo">#3</td></tr>
+          </tbody></table>
+          <div class="abox success"><span class="abox-icon">✦</span><div><div class="abox-title s">RRF corrigió el orden</div><div class="abox-text">BM25 detectó "Centaleón de Fuego" literalmente y subió el documento correcto al #1.</div></div></div>`}
+      },
+      {
+        name:'Reranking', phase:'FASE 02',
+        explain:'<strong>El RAG básico no reordena:</strong> el LLM recibirá el documento peligroso en primer lugar. El Cross-Encoder evalúa cada par (query, doc) y descarta lo irrelevante.',
+        naive:{phase:'FASE 02',title:'Sin Reranking',status:'error',html:`
+          <p style="font-size:.84rem;color:var(--text-muted);margin-bottom:.75rem;">Los 3 documentos pasan tal cual al LLM. El incorrecto sigue en #1.</p>
+          <div class="doc-list">
+            <div class="doc-item wrong"><span class="doc-rank">#1</span><span class="doc-name">Equipo de madera para bestias de fuego</span><span class="doc-badge bd">LLM LO LEERÁ PRIMERO</span></div>
+            <div class="doc-item"><span class="doc-rank">#2</span><span class="doc-name">El Centaleón de Fuego: Anatomía</span></div>
+            <div class="doc-item dimmed"><span class="doc-rank">#3</span><span class="doc-name">Recetas con ingredientes de fuego</span></div>
+          </div>
+          <div class="abox danger"><span class="abox-icon">◆</span><div><div class="abox-title d">Efecto "Lost in the Middle"</div><div class="abox-text">El LLM pondrá más atención al #1 (el incorrecto). La respuesta estará basada en información peligrosa.</div></div></div>`},
+        advanced:{phase:'FASE 02',title:'Cross-Encoder Reranking',status:'ok',html:`
+          <p style="font-size:.84rem;color:var(--text-muted);margin-bottom:.75rem;">El Cross-Encoder evalúa cada par (query, documento) concatenados. Asigna un score de relevancia preciso.</p>
+          <table class="stbl"><thead><tr><th>Documento</th><th>Score CE</th><th>Decisión</th></tr></thead><tbody>
+            <tr><td>Centaleón de Fuego: Anatomía</td><td class="shi">0.94</td><td class="shi">✓ Pasa al LLM</td></tr>
+            <tr><td>Equipo de madera para bestias</td><td class="slo">0.41</td><td class="slo">✕ Descartado</td></tr>
+            <tr><td>Recetas con ingredientes de fuego</td><td class="slo">0.12</td><td class="slo">✕ Descartado</td></tr>
+          </tbody></table>
+          <div class="abox success"><span class="abox-icon">✦</span><div><div class="abox-title s">Solo el mejor documento pasa</div><div class="abox-text">El documento sobre equipo de madera fue descartado. El LLM recibirá únicamente contexto relevante.</div></div></div>`}
+      },
+      {
+        name:'CRAG', phase:'FASE 03',
+        explain:'<strong>El RAG básico no verifica nada.</strong> CRAG evalúa si el doc top-1 es factualmente correcto, en este caso detecta que es AMBIGUO (falta estrategia de combate) y activa búsqueda web.',
+        naive:{phase:'FASE 03',title:'Sin evaluación (CRAG ausente)',status:'error',html:`
+          <div class="abox danger"><span class="abox-icon">⊗</span><div><div class="abox-title d">CRAG no instalado</div><div class="abox-text">Los documentos pasan directo al LLM. Si hay información incorrecta, el LLM la usará sin saberlo.</div></div></div>
+          <div style="padding:.75rem 1rem;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.06);border-radius:3px;margin-top:.75rem;">
+            <p style="font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted);margin-bottom:.3rem;">Enviando al LLM sin filtro:</p>
+            <p style="font-size:.83rem;color:var(--text-primary);">"Equipo de madera..." + "Centaleón: Anatomía" + "Recetas de fuego"</p>
+          </div>`},
+        advanced:{phase:'FASE 03',title:'CRAG (LLM Judge evalúa)',status:'warn',html:`
+          <p style="font-size:.84rem;color:var(--text-muted);margin-bottom:.75rem;">Un LLM juez evalúa si el doc top-1 responde correctamente la query.</p>
+          <div class="crag-score ambiguous">
+            <div class="crag-val ambiguous">0.62</div>
+            <div class="crag-info"><strong>VEREDICTO: AMBIGUO</strong><small>Umbral CORRECTO: ≥ 0.80 · Score: 0.62</small><small>Tiene anatomía pero le falta estrategia de combate con fuego</small></div>
+          </div>
+          <div class="abox warn"><span class="abox-icon">⊙</span><div><div class="abox-title w">Búsqueda web complementaria activada</div><div class="abox-text">Tavily Web Search → "Centaleón Fuego debilidades hielo estrategia combate"</div></div></div>
+          <div class="ctx-block"><div class="cl">Contexto corregido → LLM</div><div class="ct">[Enciclopedia Hyliana · 0.97] "Inmune a fuego y madera. Debilidad: hielo elemental. Usar flechas de hielo y armadura ígnifruga."</div></div>`}
+      },
+      {
+        name:'Respuesta', phase:'OUTPUT',
+        explain:'<strong>El resultado final lo dice todo.</strong> El RAG básico genera una respuesta letal. El pipeline avanzado entrega la táctica correcta basada en contexto verificado.',
+        naive:{phase:'OUTPUT',title:'Respuesta del LLM (Alucinación)',status:'error',html:`
+          <div class="final-ans wrong">
+            <div class="final-ans-lbl">✗ Respuesta generada</div>
+            <div class="final-ans-txt">"Para derrotar al Centaleón de Fuego, equípate con una espada de madera resistente y un escudo de madera para bloquear sus llamaradas. La madera actúa como aislante térmico natural..."</div>
+            <div class="final-ans-note">ALUCINACIÓN · La madera se incendia al contacto · Información letal</div>
+          </div>
+          <div class="abox danger"><span class="abox-icon">◆</span><div><div class="abox-title d">Faithfulness: 0%</div><div class="abox-text">El LLM usó el documento incorrecto del #1. La respuesta no solo es inútil, es peligrosa.</div></div></div>`},
+        advanced:{phase:'OUTPUT',title:'Respuesta verificada por CRAG',status:'ok',html:`
+          <div class="final-ans correct">
+            <div class="final-ans-lbl">✓ Respuesta verificada</div>
+            <div class="final-ans-txt">"Para derrotar al Centaleón de Fuego, <strong>evita el equipo de madera</strong>, se incendiará al instante. Equipa <strong>flechas de hielo elemental</strong> para apagar sus escudos de llama y usa <strong>armadura ígnifruga</strong> para resistir el daño de área."</div>
+            <div class="final-ans-note">✓ Basada en fuente verificada por CRAG · Sin alucinaciones</div>
+          </div>
+          <div class="metrics-mini">
+            <div class="metric-chip"><span class="metric-val" style="color:var(--success)">100%</span><div class="metric-lbl">Hit Rate</div></div>
+            <div class="metric-chip"><span class="metric-val" style="color:var(--cyan)">1.0</span><div class="metric-lbl">MRR</div></div>
+            <div class="metric-chip"><span class="metric-val" style="color:var(--success)">98%</span><div class="metric-lbl">Faithfulness</div></div>
+          </div>`}
+      }
+    ]
+  },
+  {
+    query: '¿Dónde está el Santuario del Glaciar Nival?',
+    steps: [
+      {
+        name:'Consulta', phase:'INPUT',
+        explain:'"Glaciar Nival" es un nombre propio exacto. Este escenario demuestra por qué BM25 es esencial junto al Dense Retrieval.',
+        naive:{phase:'INPUT',title:'Consulta recibida',status:'neutral',html:`<div class="abox info"><span class="abox-icon">◈</span><div><div class="abox-title c">Query</div><div class="abox-text">"¿Dónde está el Santuario del Glaciar Nival?"</div></div></div><p style="font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted);margin-top:.75rem;">Siguiente → búsqueda vectorial directa</p>`},
+        advanced:{phase:'INPUT',title:'Consulta recibida',status:'neutral',html:`<div class="abox info"><span class="abox-icon">◈</span><div><div class="abox-title c">Query</div><div class="abox-text">"¿Dónde está el Santuario del Glaciar Nival?"</div></div></div><p style="font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted);margin-top:.75rem;">Siguiente → Dense + BM25 en paralelo</p>`}
+      },
+      {
+        name:'Búsqueda', phase:'FASE 01',
+        explain:'<strong>"Glaciar Nival" es un nombre propio.</strong> Dense lo trata como "zona fría" semánticamente y lo entierra en #3. BM25 detecta la cadena exacta y lo sube al #1.',
+        naive:{phase:'FASE 01',title:'Dense Retrieval (solo vectorial)',status:'warn',html:`
+          <p style="font-size:.84rem;color:var(--text-muted);margin-bottom:.75rem;">Dense busca por significado "lugar frío y nevado", no reconoce el nombre propio exacto.</p>
+          <div class="doc-list">
+            <div class="doc-item"><span class="doc-rank">#1</span><span class="doc-name">Guía de zonas nevadas de Hyrule</span><span class="doc-score mid">0.81</span></div>
+            <div class="doc-item"><span class="doc-rank">#2</span><span class="doc-name">Equipamiento para clima frío</span><span class="doc-score mid">0.77</span></div>
+            <div class="doc-item wrong"><span class="doc-rank">#3</span><span class="doc-name">Santuario del Glaciar Nival: Ubicación</span><span class="doc-score lo">0.64</span><span class="doc-badge bw">¡ENTERRADO!</span></div>
+          </div>
+          <div class="abox warn"><span class="abox-icon">▲</span><div><div class="abox-title w">Doc correcto en #3</div><div class="abox-text">Dense no reconoció "Glaciar Nival" como nombre propio. El documento exacto quedó enterrado.</div></div></div>`},
+        advanced:{phase:'FASE 01',title:'Búsqueda Híbrida: Dense + BM25 + RRF',status:'ok',html:`
+          <p style="font-size:.84rem;color:var(--text-muted);margin-bottom:.75rem;">BM25 detecta "Glaciar Nival" literalmente con score altísimo.</p>
+          <table class="stbl"><thead><tr><th>Documento</th><th>Dense</th><th>BM25</th><th>RRF</th></tr></thead><tbody>
+            <tr><td>Santuario del Glaciar Nival: Ubicación</td><td class="slo">0.64</td><td class="shi">22.1</td><td class="shi">#1 ✓</td></tr>
+            <tr><td>Guía de zonas nevadas</td><td class="shi">0.81</td><td class="slo">2.3</td><td class="smi">#2</td></tr>
+            <tr><td>Equipamiento clima frío</td><td class="smi">0.77</td><td class="slo">1.1</td><td class="slo">#3</td></tr>
+          </tbody></table>
+          <div class="abox success"><span class="abox-icon">✦</span><div><div class="abox-title s">BM25 rescató el nombre propio</div><div class="abox-text">Score BM25 de 22.1 subió el doc de ubicación de #3 a #1.</div></div></div>`}
+      },
+      {
+        name:'Reranking', phase:'FASE 02',
+        explain:'El Cross-Encoder confirma que el doc de ubicación exacta es el más relevante con score 0.97.',
+        naive:{phase:'FASE 02',title:'Sin Reranking',status:'error',html:`
+          <p style="font-size:.84rem;color:var(--text-muted);margin-bottom:.75rem;">El doc correcto sigue en #3. El LLM sufrirá "Lost in the Middle" y probablemente lo ignorará.</p>
+          <div class="doc-list">
+            <div class="doc-item"><span class="doc-rank">#1</span><span class="doc-name">Guía de zonas nevadas de Hyrule</span><span class="doc-badge bw">LLM VE PRIMERO</span></div>
+            <div class="doc-item"><span class="doc-rank">#2</span><span class="doc-name">Equipamiento para clima frío</span></div>
+            <div class="doc-item wrong"><span class="doc-rank">#3</span><span class="doc-name">Santuario del Glaciar Nival: Ubicación</span><span class="doc-badge bd">IGNORADO</span></div>
+          </div>`},
+        advanced:{phase:'FASE 02',title:'Cross-Encoder confirma ranking',status:'ok',html:`
+          <table class="stbl"><thead><tr><th>Documento</th><th>Score CE</th><th>Decisión</th></tr></thead><tbody>
+            <tr><td>Santuario del Glaciar Nival: Ubicación</td><td class="shi">0.97</td><td class="shi">✓ Top-1</td></tr>
+            <tr><td>Guía de zonas nevadas</td><td class="slo">0.35</td><td class="slo">✕ Descartado</td></tr>
+            <tr><td>Equipamiento clima frío</td><td class="slo">0.22</td><td class="slo">✕ Descartado</td></tr>
+          </tbody></table>
+          <div class="abox success"><span class="abox-icon">✦</span><div><div class="abox-title s">Cross-Encoder confirma: 0.97</div><div class="abox-text">Solo el doc de ubicación exacta llega al CRAG.</div></div></div>`}
+      },
+      {
+        name:'CRAG', phase:'FASE 03',
+        explain:'El documento de ubicación es correcto y preciso. CRAG lo aprueba sin necesitar búsqueda web → caso CORRECTO.',
+        naive:{phase:'FASE 03',title:'Sin evaluación',status:'error',html:`<div class="abox danger"><span class="abox-icon">⊗</span><div><div class="abox-title d">Sin verificación</div><div class="abox-text">Se envían los 3 docs al LLM. El de ubicación está en #3 y probablemente será ignorado.</div></div></div>`},
+        advanced:{phase:'FASE 03',title:'CRAG → CORRECTO · Sin web search',status:'ok',html:`
+          <div class="crag-score correct">
+            <div class="crag-val correct">0.93</div>
+            <div class="crag-info"><strong>VEREDICTO: CORRECTO</strong><small>Score 0.93 ≥ umbral 0.80 · No se necesita búsqueda web</small></div>
+          </div>
+          <div class="abox success"><span class="abox-icon">✦</span><div><div class="abox-title s">Documento aprobado directamente</div><div class="abox-text">CRAG lo aprueba y lo envía al LLM sin pasos adicionales.</div></div></div>
+          <div class="ctx-block"><div class="cl">Contexto aprobado → LLM</div><div class="ct">"El Santuario del Glaciar Nival se encuentra en la cima del Monte Lanayru, al norte de Zora's Domain. Coordenadas aproximadas: 3837, 0874."</div></div>`}
+      },
+      {
+        name:'Respuesta', phase:'OUTPUT',
+        explain:'Sin pipeline, el LLM da información genérica sobre zonas nevadas. Con pipeline, da las coordenadas exactas gracias a BM25.',
+        naive:{phase:'OUTPUT',title:'Respuesta imprecisa',status:'warn',html:`
+          <div class="final-ans wrong">
+            <div class="final-ans-lbl">✗ Respuesta generada</div>
+            <div class="final-ans-txt">"Para encontrar el Santuario, explora las zonas nevadas del norte de Hyrule. Necesitarás ropa de abrigo y buscar en zonas montañosas elevadas cerca de glaciares..."</div>
+            <div class="final-ans-note">IMPRECISA · Sin coordenadas · Hit Rate fallido</div>
+          </div>`},
+        advanced:{phase:'OUTPUT',title:'Respuesta exacta',status:'ok',html:`
+          <div class="final-ans correct">
+            <div class="final-ans-lbl">✓ Respuesta verificada</div>
+            <div class="final-ans-txt">"El <strong>Santuario del Glaciar Nival</strong> está en la cima del <strong>Monte Lanayru</strong>, al norte de Zora's Domain. Coordenadas: <strong>3837, 0874</strong>. Lleva ropa de clima frío o elixires de resistencia."</div>
+            <div class="final-ans-note">✓ BM25 rescató el nombre propio · Coordenadas exactas</div>
+          </div>
+          <div class="metrics-mini">
+            <div class="metric-chip"><span class="metric-val" style="color:var(--success)">100%</span><div class="metric-lbl">Hit Rate</div></div>
+            <div class="metric-chip"><span class="metric-val" style="color:var(--cyan)">1.0</span><div class="metric-lbl">MRR</div></div>
+            <div class="metric-chip"><span class="metric-val" style="color:var(--success)">97%</span><div class="metric-lbl">Faithfulness</div></div>
+          </div>`}
+      }
+    ]
+  },
+  {
+    query: '¿Cómo obtener la Espada Maestra?',
+    steps: [
+      {
+        name:'Consulta', phase:'INPUT',
+        explain:'"Espada Maestra" es el nombre propio más icónico de Zelda. Otro caso donde BM25 marca la diferencia.',
+        naive:{phase:'INPUT',title:'Consulta recibida',status:'neutral',html:`<div class="abox info"><span class="abox-icon">◈</span><div><div class="abox-title c">Query</div><div class="abox-text">"¿Cómo obtener la Espada Maestra?"</div></div></div>`},
+        advanced:{phase:'INPUT',title:'Consulta recibida',status:'neutral',html:`<div class="abox info"><span class="abox-icon">◈</span><div><div class="abox-title c">Query</div><div class="abox-text">"¿Cómo obtener la Espada Maestra?"</div></div></div>`}
+      },
+      {
+        name:'Búsqueda', phase:'FASE 01',
+        explain:'Dense entiende "espada legendaria" semánticamente y trae guías genéricas de armas. BM25 identifica "Espada Maestra" como término exacto con score 25.3.',
+        naive:{phase:'FASE 01',title:'Dense Retrieval',status:'warn',html:`
+          <div class="doc-list">
+            <div class="doc-item"><span class="doc-rank">#1</span><span class="doc-name">Guía de armas legendarias de Hyrule</span><span class="doc-score mid">0.85</span></div>
+            <div class="doc-item"><span class="doc-rank">#2</span><span class="doc-name">Cómo mejorar espadas de una mano</span><span class="doc-score mid">0.78</span></div>
+            <div class="doc-item wrong"><span class="doc-rank">#3</span><span class="doc-name">La Espada Maestra: Requisitos y ubicación</span><span class="doc-score lo">0.67</span><span class="doc-badge bw">ENTERRADA</span></div>
+          </div>
+          <div class="abox warn"><span class="abox-icon">▲</span><div><div class="abox-title w">Doc correcto en #3</div><div class="abox-text">Dense interpretó "Espada Maestra" como "arma legendaria genérica".</div></div></div>`},
+        advanced:{phase:'FASE 01',title:'Búsqueda Híbrida',status:'ok',html:`
+          <table class="stbl"><thead><tr><th>Documento</th><th>Dense</th><th>BM25</th><th>RRF</th></tr></thead><tbody>
+            <tr><td>La Espada Maestra: Requisitos y ubicación</td><td class="slo">0.67</td><td class="shi">25.3</td><td class="shi">#1 ✓</td></tr>
+            <tr><td>Guía de armas legendarias</td><td class="shi">0.85</td><td class="slo">2.1</td><td class="smi">#2</td></tr>
+            <tr><td>Cómo mejorar espadas</td><td class="smi">0.78</td><td class="slo">1.8</td><td class="slo">#3</td></tr>
+          </tbody></table>
+          <div class="abox success"><span class="abox-icon">✦</span><div><div class="abox-title s">BM25 score 25.3, el más alto</div><div class="abox-text">"Espada Maestra" detectada literalmente. Subió de #3 a #1.</div></div></div>`}
+      },
+      {
+        name:'Reranking', phase:'FASE 02',
+        explain:'El Cross-Encoder confirma con score 0.98 que solo el doc de requisitos específicos de la Espada Maestra es relevante.',
+        naive:{phase:'FASE 02',title:'Sin Reranking',status:'error',html:`
+          <div class="doc-list">
+            <div class="doc-item"><span class="doc-rank">#1</span><span class="doc-name">Guía de armas legendarias</span><span class="doc-badge bw">LLM VE PRIMERO</span></div>
+            <div class="doc-item"><span class="doc-rank">#2</span><span class="doc-name">Cómo mejorar espadas</span></div>
+            <div class="doc-item wrong"><span class="doc-rank">#3</span><span class="doc-name">La Espada Maestra: Requisitos</span><span class="doc-badge bd">IGNORADA</span></div>
+          </div>`},
+        advanced:{phase:'FASE 02',title:'Cross-Encoder',status:'ok',html:`
+          <table class="stbl"><thead><tr><th>Documento</th><th>Score CE</th><th>Decisión</th></tr></thead><tbody>
+            <tr><td>La Espada Maestra: Requisitos y ubicación</td><td class="shi">0.98</td><td class="shi">✓ Top-1</td></tr>
+            <tr><td>Guía de armas legendarias</td><td class="slo">0.38</td><td class="slo">✕ Descartado</td></tr>
+            <tr><td>Cómo mejorar espadas</td><td class="slo">0.29</td><td class="slo">✕ Descartado</td></tr>
+          </tbody></table>
+          <div class="abox success"><span class="abox-icon">✦</span><div><div class="abox-title s">Score 0.98, máxima confianza</div><div class="abox-text">Solo el doc de requisitos exactos llega al CRAG.</div></div></div>`}
+      },
+      {
+        name:'CRAG', phase:'FASE 03',
+        explain:'El documento sobre la Espada Maestra es correcto y está actualizado. CRAG lo aprueba directamente.',
+        naive:{phase:'FASE 03',title:'Sin evaluación',status:'error',html:`<div class="abox danger"><span class="abox-icon">⊗</span><div><div class="abox-title d">Sin verificación</div><div class="abox-text">El LLM recibe los 3 docs con la guía genérica de armas en #1.</div></div></div>`},
+        advanced:{phase:'FASE 03',title:'CRAG → CORRECTO',status:'ok',html:`
+          <div class="crag-score correct">
+            <div class="crag-val correct">0.96</div>
+            <div class="crag-info"><strong>CORRECTO</strong><small>Score 0.96 ≥ umbral 0.80 · Sin búsqueda web necesaria</small></div>
+          </div>
+          <div class="ctx-block"><div class="cl">Contexto aprobado → LLM</div><div class="ct">"La Espada Maestra requiere 13 corazones completos. Está en el Gran Bosque Korok, al norte de Hyrule. Supera la prueba del Gran Árbol Deku para desenterrarla."</div></div>`}
+      },
+      {
+        name:'Respuesta', phase:'OUTPUT',
+        explain:'Sin pipeline el LLM da información vaga. Con pipeline da los 13 corazones, la ubicación y la prueba del Gran Árbol Deku.',
+        naive:{phase:'OUTPUT',title:'Respuesta vaga',status:'warn',html:`
+          <div class="final-ans wrong">
+            <div class="final-ans-lbl">✗ Respuesta generada</div>
+            <div class="final-ans-txt">"Para obtener una espada legendaria en Hyrule, debes explorar los templos más peligrosos del reino y demostrar tu valía como héroe. Las armas legendarias suelen estar protegidas por guardianes..."</div>
+            <div class="final-ans-note">IMPRECISA · Sin requisitos exactos · 13 corazones no mencionados</div>
+          </div>`},
+        advanced:{phase:'OUTPUT',title:'Respuesta exacta',status:'ok',html:`
+          <div class="final-ans correct">
+            <div class="final-ans-lbl">✓ Respuesta verificada</div>
+            <div class="final-ans-txt">"Para obtener la <strong>Espada Maestra</strong>, necesitas <strong>13 corazones completos</strong>. Está en el <strong>Gran Bosque Korok</strong>, al norte de Hyrule. Supera la prueba del <strong>Gran Árbol Deku</strong> para desenterrarla."</div>
+            <div class="final-ans-note">✓ Requisitos exactos · Ubicación precisa · CRAG verificado</div>
+          </div>
+          <div class="metrics-mini">
+            <div class="metric-chip"><span class="metric-val" style="color:var(--success)">100%</span><div class="metric-lbl">Hit Rate</div></div>
+            <div class="metric-chip"><span class="metric-val" style="color:var(--cyan)">1.0</span><div class="metric-lbl">MRR</div></div>
+            <div class="metric-chip"><span class="metric-val" style="color:var(--success)">99%</span><div class="metric-lbl">Faithfulness</div></div>
+          </div>`}
+      }
+    ]
+  }
+];
+
+/* ══ STATE ═══════════════════════════════════════════════════ */
+let currentScenario = 0;
+let currentStep = -1;
+
+/* ══ INDICATOR ═══════════════════════════════════════════════ */
+function renderIndicator() {
+  const steps = SCENARIOS[currentScenario].steps;
+  document.getElementById('step-indicator').innerHTML = steps.map((s, i) => `
+    <div class="step-dot ${i < currentStep ? 'done' : i === currentStep ? 'active' : ''}">
+      <div class="step-dot-circle ${i < currentStep ? 'done' : i === currentStep ? 'active' : ''}">
+        ${i < currentStep ? '✓' : i + 1}
+      </div>
+      <div class="step-dot-label">${s.name}</div>
+    </div>
+    ${i < steps.length - 1 ? `<div class="step-connector ${i < currentStep ? 'done' : ''}"></div>` : ''}
+  `).join('');
+}
+
+/* ══ RENDER STEP ════════════════════════════════════════════ */
+function renderStep(idx) {
+  const s = SCENARIOS[currentScenario].steps[idx];
+
+  document.getElementById('step-explain').style.display = 'block';
+  document.getElementById('step-explain').innerHTML = s.explain;
+  document.getElementById('step-label-bar').innerHTML =
+    `Paso <span>${idx + 1} de ${SCENARIOS[currentScenario].steps.length}</span> · <span>${s.phase} · ${s.name}</span>`;
+
+  renderCol('naive-content', s.naive);
+  renderCol('adv-content',   s.advanced);
+
+  if (idx === SCENARIOS[currentScenario].steps.length - 1) {
+    const lang = document.documentElement.lang || 'es';
+    document.getElementById('naive-badge').textContent = lang === 'en' ? '✗ Hallucination'   : '✗ Alucinación';
+    document.getElementById('adv-badge').textContent   = lang === 'en' ? '✓ No hallucinations': '✓ Sin alucinaciones';
+  }
+}
+
+function renderCol(id, d) {
+  const st = { ok:'✓ OK', warn:'⚠ ATENCIÓN', error:'✗ PROBLEMA', neutral:'– EN ESPERA' };
+  const sc = { ok:'ok',   warn:'warn',        error:'error',      neutral:'neutral' };
+  document.getElementById(id).innerHTML = `
+    <div class="step-card">
+      <div class="step-card-head">
+        <span class="step-card-phase">${d.phase}</span>
+        <span class="step-card-title">${d.title}</span>
+        <span class="step-status ${sc[d.status]}">${st[d.status]}</span>
+      </div>
+      <div class="step-card-body">${d.html}</div>
+    </div>`;
+}
+
+/* ══ CONTROLS ════════════════════════════════════════════════ */
+function _t(key) {
+  /* Safe getter: falls back to Spanish if TRANSLATIONS not yet loaded */
+  if (typeof TRANSLATIONS !== 'undefined') {
+    const lang = document.documentElement.lang || 'es';
+    return (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) || TRANSLATIONS['es'][key] || key;
+  }
+  return key;
+}
+
+function nextStep() {
+  currentStep++;
+  const total = SCENARIOS[currentScenario].steps.length;
+
+  if (currentStep === 0) {
+    document.getElementById('btn-reset').style.display = 'inline-flex';
+    document.getElementById('btn-next').textContent = _t('sim.btn.next');
+  }
+
+  if (currentStep >= total) {
+    document.getElementById('btn-next').disabled = true;
+    document.getElementById('btn-next').textContent = _t('sim.btn.done');
+    return;
+  }
+
+  if (currentStep === total - 1) {
+    document.getElementById('btn-next').textContent = _t('sim.btn.final');
+  }
+
+  renderIndicator();
+  renderStep(currentStep);
+}
+
+function resetSim() {
+  currentStep = -1;
+  document.getElementById('btn-next').disabled = false;
+  document.getElementById('btn-next').textContent = _t('sim.btn.start');
+  document.getElementById('btn-reset').style.display = 'none';
+  document.getElementById('step-explain').style.display = 'none';
+  document.getElementById('step-label-bar').innerHTML = _t('sim.label.initial');
+  document.getElementById('naive-badge').textContent = _t('sim.badge.naive');
+  document.getElementById('adv-badge').textContent   = _t('sim.badge.adv');
+  document.getElementById('naive-content').innerHTML = '<div class="step-card"><div class="empty-state"> Esperando inicio </div></div>';
+  document.getElementById('adv-content').innerHTML   = '<div class="step-card"><div class="empty-state"> Esperando inicio </div></div>';
+  renderIndicator();
+}
+
+function selectScenario(id, btn) {
+  document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentScenario = id;
+  document.getElementById('query-text').textContent = SCENARIOS[id].query;
+  resetSim();
+}
+
+/* ══ BOOT ════════════════════════════════════════════════════ */
+renderIndicator();
+</script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reranking · Tableta Sheikah RAG</title>
+  <link rel="stylesheet" href="../assets/css/main.css" />
+</head>
+<body>
+  <div class="page-wrapper">
+
+    <!-- ── NAVIGATION ──────────────────────────────────────── -->
+    <nav class="nav">
+      <a class="nav-brand" href="../index.html">
+        <span class="nav-eye">⊙</span>
+        Tableta Sheikah · RAG
+      </a>
+      <ul class="nav-links">
+        <li><a href="../index.html" data-i18n="nav.home">Inicio</a></li>
+        <li><a href="hibrida.html" data-i18n="nav.hybrid">Híbrida</a></li>
+        <li><a href="reranking.html" class="active" data-i18n="nav.reranking">Reranking</a></li>
+        <li><a href="crag.html" data-i18n="nav.crag">CRAG</a></li>
+        <li><a href="tradeoffs.html" data-i18n="nav.tradeoffs">Trade-offs</a></li>
+        <li><a href="simulacion.html" data-i18n="nav.simulation">Simulación</a></li>
+        <li><a href="notebook.html" data-i18n="nav.notebook">Notebook</a></li>
+      </ul>
+      <button class="lang-toggle" onclick="setLang(document.documentElement.lang==='es'?'en':'es')" id="lang-btn">EN</button>
+    </nav>
+
+    <!-- ── PAGE HERO ───────────────────────────────────────── -->
+    <section class="page-hero">
+      <div class="container">
+        <nav class="breadcrumb">
+          <a href="../index.html" data-i18n="bc.home">Inicio</a>
+          <span class="sep">›</span>
+          <span class="current" data-i18n="bc.reranking">Reranking</span>
+        </nav>
+        <p class="hero-tag" data-i18n="rer.tag">Fase 02 · KPI: MRR</p>
+        <h1 data-i18n="rer.h1">Reranking</h1>
+        <p class="subtitle" data-i18n="rer.sub">Cross-Encoder · Eliminando el efecto "Lost in the Middle"</p>
+        <p class="intro" data-i18n="rer.intro">
+          Cuando la base de datos devuelve los 20 mejores documentos (el Top K), estos vienen
+          ordenados por la puntuación del buscador, hecha con modelos rápidos y poco precisos
+          (Bi-encoders) por cuestiones de rendimiento. Tener el documento correcto en la posición
+          18 de 20 es casi tan malo como no tenerlo: el LLM lo ignorará.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── SECTION 1: LOST IN THE MIDDLE ──────────────────── -->
+    <section class="section" style="padding-top: 0;">
+      <div class="container">
+
+        <div class="phase-header">
+          <span class="phase-watermark">01</span>
+          <span class="phase-title" data-i18n="rer.s1.title">El Problema: Lost in the Middle</span>
+        </div>
+
+        <div class="highlight" data-i18n-html="rer.litm.body">
+          <strong>El efecto "Lost in the Middle":</strong> Si le pasamos 20 documentos
+          desordenados al LLM, sufrirá de este fenómeno: la IA tiende a olvidar lo que
+          está en medio del texto y solo presta atención al principio y al final. Esto
+          significa que si el documento más relevante cae en las posiciones centrales del
+          contexto, el LLM lo procesará con menor atención y generará una respuesta de
+          menor calidad o directamente incorrecta. Tener el documento correcto en la
+          posición 18 de 20 es casi tan malo como no tenerlo en absoluto.
+        </div>
+
+        <div class="panel" style="margin-top: 1.5rem;">
+          <h3 data-i18n="rer.why.h3">¿Por qué ocurre esto?</h3>
+          <p data-i18n="rer.why.body">
+            Los modelos de lenguaje grandes tienen un sesgo posicional conocido como
+            "recency bias" y "primacy bias": prestan más atención al inicio y al final
+            del contexto proporcionado. Los documentos en las posiciones intermedias de
+            un contexto largo reciben, estadísticamente, menos peso en el mecanismo de
+            atención del transformer. El Reranking resuelve esto asegurando que los
+            documentos más relevantes siempre estén en las primeras posiciones, donde
+            el LLM los procesa con mayor fidelidad.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── SECTION 2: BI-ENCODER VS CROSS-ENCODER ─────────── -->
+    <section class="section">
+      <div class="container">
+
+        <div class="phase-header">
+          <span class="phase-watermark">02</span>
+          <span class="phase-title" data-i18n="rer.s2.title">Bi-Encoder vs Cross-Encoder</span>
+        </div>
+
+        <div class="grid-2">
+
+          <div class="panel">
+            <h3 data-i18n="rer.bi.h3">Bi-Encoder (Búsqueda Inicial)</h3>
+            <p style="margin-bottom: 1rem;" data-i18n-html="rer.bi.p">
+              Codifica la consulta y el documento de forma <strong>separada e independiente</strong>.
+              Genera un vector para la consulta y vectores pre-calculados para los documentos,
+              luego calcula la similitud con una simple operación de producto escalar o coseno.
+            </p>
+            <ul class="dot-list">
+              <li data-i18n-html="rer.bi.li1"><strong>Velocidad:</strong> Muy rápido, permite indexar millones de documentos porque los vectores se calculan una sola vez.</li>
+              <li data-i18n-html="rer.bi.li2"><strong>Interacción:</strong> Superficial, la consulta y el documento no se "ven" mutuamente durante la codificación.</li>
+              <li data-i18n-html="rer.bi.li3"><strong>Uso:</strong> Recuperación inicial del Top K (primeras decenas de documentos candidatos).</li>
+              <li data-i18n-html="rer.bi.li4"><strong>Limitación:</strong> La precisión del ranking es moderada; el orden no es perfectamente fiable.</li>
+            </ul>
+          </div>
+
+          <div class="panel cyan-top">
+            <h3 data-i18n="rer.ce.h3">Cross-Encoder (Reranker)</h3>
+            <p style="margin-bottom: 1rem;" data-i18n-html="rer.ce.p">
+              Recibe la consulta y el documento <strong>juntos como una sola entrada concatenada</strong>.
+              El modelo procesa ambos textos simultáneamente, permitiendo una interacción profunda
+              entre cada token de la consulta y cada token del documento.
+            </p>
+            <ul class="dot-list">
+              <li data-i18n-html="rer.ce.li1"><strong>Velocidad:</strong> Lento, no es escalable para indexar millones de documentos, solo para candidatos reducidos.</li>
+              <li data-i18n-html="rer.ce.li2"><strong>Interacción:</strong> Profunda, el modelo entiende la relación exacta entre pregunta y documento.</li>
+              <li data-i18n-html="rer.ce.li3"><strong>Uso:</strong> Reordenar el Top K de candidatos (típicamente Top 20 → Top 3-5).</li>
+              <li data-i18n-html="rer.ce.li4"><strong>Precisión:</strong> Score de relevancia mucho más preciso que el Bi-Encoder.</li>
+            </ul>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── SECTION 3: ESTRATEGIA ───────────────────────────── -->
+    <section class="section">
+      <div class="container">
+
+        <div class="phase-header">
+          <span class="phase-watermark">03</span>
+          <span class="phase-title" data-i18n="rer.s3.title">La Estrategia de Dos Etapas</span>
+        </div>
+
+        <div class="panel">
+          <h3 data-i18n="rer.judge.h3">El juez minucioso</h3>
+          <p data-i18n-html="rer.judge.body">
+            El Reranking introduce un modelo especializado (Cross-encoder) que actúa como un
+            <strong>juez minucioso</strong>. No busca en la base de datos; simplemente toma
+            esos 20 documentos y la pregunta del usuario, y los evalúa cruzadamente,
+            recalculando su relevancia exacta. El resultado: reordena la lista, poniendo
+            los 3 o 4 documentos más perfectos hasta arriba. El LLM entonces solo necesita
+            leer esos pocos documentos de alta calidad, evitando el ruido y el efecto
+            "Lost in the Middle".
+          </p>
+        </div>
+
+        <div class="formula">Top-20 (Bi-Encoder)  →  Cross-Encoder Judge  →  Top-3 (Reranked)  →  LLM</div>
+
+        <div class="highlight" style="margin-top: 1.5rem;" data-i18n-html="rer.key.body">
+          <strong>La clave del pipeline en dos etapas:</strong> El Bi-Encoder se usa primero
+          porque es rápido y puede filtrar de millones a decenas de candidatos en milisegundos.
+          El Cross-Encoder se usa después porque es preciso pero lento, y ya solo tiene que
+          evaluar 20 documentos, no millones. Esta combinación logra el mejor equilibrio entre
+          velocidad y precisión del sistema.
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── ZELDA ANALOGY ────────────────────────────────────── -->
+    <div class="container">
+      <div class="divider"></div>
+      <div class="zelda-box">
+        <div class="zelda-label" data-i18n="rer.zelda.lbl">⊙ Analogía Sheikah</div>
+        <img src="../assets/img/analogy-reranking.jpg" alt="Analogía Reranking" style="width:100%;border-radius:4px;margin-bottom:1rem;display:block;">
+        <p data-i18n="rer.zelda.p">
+          Tras derrotar a un campamento de Bokoblins, Link recoge un montón de armas del suelo
+          a toda prisa. Su alforja está llena y desordenada. En el fondo de la bolsa quedó la
+          Espada Maestra, y arriba tiene un garrote de madera a punto de romperse. El Reranking
+          es presionar el botón de "Auto-ordenar Inventario". El sistema pausa un segundo,
+          evalúa el poder y durabilidad de todo lo que recogió, y pone las mejores armas en las
+          primeras casillas de acceso rápido, enviando la basura al fondo para que Link no la
+          use por error en la batalla.
+        </p>
+      </div>
+    </div>
+
+    <!-- ── KPI SECTION ──────────────────────────────────────── -->
+    <section class="section">
+      <div class="container">
+
+        <div class="kpi-section">
+          <h3 data-i18n="rer.kpi.h3">MRR (Mean Reciprocal Rank)</h3>
+
+          <div class="kpi-entry">
+            <div class="kpi-entry-label" data-i18n="rer.kpi.lbl1">Definición Técnica</div>
+            <p data-i18n-html="rer.kpi.p1">
+              Evalúa en qué posición quedó el <strong>primer documento relevante</strong>.
+              Se calcula con el inverso de la posición:
+            </p>
+            <div class="formula" style="margin: 1rem 0;">puesto  1  →  1/1  = 1.000  (perfecto)
+puesto  5  →  1/5  = 0.200
+puesto 20  →  1/20 = 0.050  (casi inútil)</div>
+            <p data-i18n="rer.kpi.p2">
+              Un MRR bajo significa que el LLM se perderá leyendo basura antes de llegar a la
+              respuesta correcta. El Reranking transforma un Hit Rate alto (el documento correcto
+              existe en el Top 20) en un MRR alto (el documento correcto está en posición 1 o 2).
+              Sin Reranking, puedes tener un Hit Rate del 95% pero un MRR de 0.15, tienes los
+              documentos pero en el orden equivocado.
+            </p>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="kpi-entry">
+            <div class="kpi-entry-label" data-i18n="rer.kpi.lbl2">Versión Sheikah</div>
+            <img src="../assets/img/kpi-mrr.jpg" alt="KPI MRR" style="width:100%;border-radius:4px;margin-bottom:1rem;display:block;">
+            <p data-i18n="rer.kpi.p3">
+              Link tiene medio corazón de vida y un Centaleón le ataca. Abre el menú para
+              curarse. El MRR mide qué tan rápido encuentra la poción. Si la poción roja
+              está en la ranura 1 (MRR = 1.0), se cura al instante. Si está en la ranura 20
+              (MRR = 0.05), pierde 10 segundos scrolleando y el monstruo lo elimina.
+              El Reranking pone la poción en la ranura 1: asegura que lo más importante
+              esté siempre a mano, en el momento crítico.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── PAGE NAV ─────────────────────────────────────────── -->
+    <div class="container">
+      <nav class="page-nav">
+        <a href="hibrida.html" data-i18n="rer.nav.prev">← Búsqueda Híbrida</a>
+        <a href="crag.html" data-i18n="rer.nav.next">Siguiente: CRAG →</a>
+      </nav>
+    </div>
+
+    <!-- ── FOOTER ───────────────────────────────────────────── -->
+    <footer class="footer">
+      <span class="footer-eye">⊙</span>
+      <p data-i18n="footer.text">Tableta Sheikah · Masterclass RAG · Técnicas de Optimización</p>
+    </footer>
+
+  </div><!-- /page-wrapper -->
+  <script src="../assets/js/i18n.js"></script>
+</body>
+</html>

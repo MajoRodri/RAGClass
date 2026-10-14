@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trade-offs · Tableta Sheikah RAG</title>
+  <link rel="stylesheet" href="../assets/css/main.css" />
+</head>
+<body>
+  <div class="page-wrapper">
+
+    <!-- ── NAVIGATION ──────────────────────────────────────── -->
+    <nav class="nav">
+      <a class="nav-brand" href="../index.html">
+        <span class="nav-eye">⊙</span>
+        Tableta Sheikah · RAG
+      </a>
+      <ul class="nav-links">
+        <li><a href="../index.html" data-i18n="nav.home">Inicio</a></li>
+        <li><a href="hibrida.html" data-i18n="nav.hybrid">Híbrida</a></li>
+        <li><a href="reranking.html" data-i18n="nav.reranking">Reranking</a></li>
+        <li><a href="crag.html" data-i18n="nav.crag">CRAG</a></li>
+        <li><a href="tradeoffs.html" class="active" data-i18n="nav.tradeoffs">Trade-offs</a></li>
+        <li><a href="simulacion.html" data-i18n="nav.simulation">Simulación</a></li>
+        <li><a href="notebook.html" data-i18n="nav.notebook">Notebook</a></li>
+      </ul>
+      <button class="lang-toggle" onclick="setLang(document.documentElement.lang==='es'?'en':'es')" id="lang-btn">EN</button>
+    </nav>
+
+    <!-- ── PAGE HERO ───────────────────────────────────────── -->
+    <section class="page-hero">
+      <div class="container">
+        <nav class="breadcrumb">
+          <a href="../index.html" data-i18n="bc.home">Inicio</a>
+          <span class="sep">›</span>
+          <span class="current" data-i18n="bc.tradeoffs">Trade-offs</span>
+        </nav>
+        <p class="hero-tag" data-i18n="tro.tag">Consideraciones Avanzadas</p>
+        <h1 data-i18n="tro.h1">Trade-offs y Retos de Implementación</h1>
+        <p class="subtitle" data-i18n="tro.sub">La magia tiene un precio</p>
+        <p class="intro" data-i18n="tro.intro">
+          Búsqueda Híbrida, Reranking y CRAG mejoran drásticamente la calidad de un sistema RAG,
+          pero ninguna mejora es gratuita. Cada técnica añade latencia, coste de infraestructura
+          o complejidad de mantenimiento. Antes de implementar cualquiera de ellas, hay que
+          entender exactamente qué se gana y qué se sacrifica.
+        </p>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TRADE-OFF 1: CHUNKING Y CALIDAD DE DATOS
+    ════════════════════════════════════════════════════════ -->
+    <section class="section" style="padding-top: 0;">
+      <div class="container">
+
+        <div class="phase-header">
+          <span class="phase-watermark">01</span>
+          <span class="phase-title" data-i18n="tro.s1.title">Chunking y Calidad de Datos</span>
+        </div>
+
+        <span class="s-tag" style="margin-bottom: 1.25rem; display: inline-block;" data-i18n="tro.s1.tag">Garbage In, Garbage Out</span>
+
+        <div class="panel" style="margin-top: 1rem;">
+          <h3 data-i18n="tro.chunk.h3">El problema del troceado</h3>
+          <p data-i18n-html="tro.chunk.body">
+            Antes de que la Búsqueda Híbrida pueda actuar, los documentos originales
+            (PDFs, manuales, bases de datos) deben ser cortados en pedazos más pequeños
+            llamados <strong>chunks</strong> (fragmentos). Este proceso parece trivial pero
+            es crítico: si cortas los párrafos por la mitad rompiendo las frases, o si la
+            base de datos está llena de documentos desactualizados, de nada servirá tener
+            el mejor algoritmo.
+          </p>
+        </div>
+
+        <div class="grid-3" style="margin-top: 1.5rem;">
+
+          <div class="panel danger-top">
+            <h3 style="color: var(--danger);" data-i18n="tro.bad.h3">Chunking Deficiente</h3>
+            <p data-i18n="tro.bad.body">
+              Cortar a tamaño fijo sin respetar la estructura del texto rompe el significado.
+              Una frase a mitad de párrafo pierde su contexto y se vuelve inútil o engañosa
+              para el sistema de recuperación.
+            </p>
+          </div>
+
+          <div class="panel warning-top">
+            <h3 style="color: var(--warning);" data-i18n="tro.old.h3">Datos Desactualizados</h3>
+            <p data-i18n="tro.old.body">
+              Una base de datos con documentos del año pasado puede responder con información
+              obsoleta con total confianza. El sistema no sabe que los datos están vencidos;
+              los recupera y los usa como si fueran correctos.
+            </p>
+          </div>
+
+          <div class="panel success-top">
+            <h3 style="color: var(--success);" data-i18n="tro.good.h3">Buenas Prácticas</h3>
+            <p data-i18n="tro.good.body">
+              Chunking semántico respetando párrafos, con overlap controlado entre chunks,
+              y mantenimiento regular de la base de datos con versiones y fechas de vigencia
+              de cada documento.
+            </p>
+          </div>
+
+        </div>
+
+        <div class="highlight" style="margin-top: 1.5rem;" data-i18n-html="tro.cascade.body">
+          <strong>El efecto cascada:</strong> La Búsqueda Híbrida simplemente encontrará
+          información basura más rápido. El Reranking pondrá la basura más brillante hasta
+          arriba. Y el LLM te dará una respuesta perfectamente estructurada... pero inútil.
+          Ninguna técnica avanzada puede compensar datos de entrada de mala calidad.
+        </div>
+
+        <div class="zelda-box">
+          <div class="zelda-label" data-i18n="tro.z1.lbl">⊙ Analogía Sheikah</div>
+          <img src="../assets/img/analogy-chunking.jpg" alt="Analogía Chunking" style="width:100%;border-radius:4px;margin-bottom:1rem;display:block;">
+          <p data-i18n="tro.z1.p">
+            Link usa la Cámara Sheikah para registrar monstruos en su Enciclopedia. Si Link
+            le toma una foto borrosa a una piedra pensando que es un monstruo (mal chunking /
+            malos datos), el sensor de la tableta no servirá de nada. Por más avanzado que
+            sea el radar, te guiará hacia una piedra inútil porque la información base estaba
+            mal desde el principio. Garbage In, Garbage Out es la primera ley del
+            desarrollo de sistemas de IA.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="container"><div class="divider"></div></div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TRADE-OFF 2: LATENCIA
+    ════════════════════════════════════════════════════════ -->
+    <section class="section">
+      <div class="container">
+
+        <div class="phase-header">
+          <span class="phase-watermark">02</span>
+          <span class="phase-title" data-i18n="tro.s2.title">Latencia</span>
+        </div>
+
+        <span class="s-tag cyan" style="margin-bottom: 1.25rem; display: inline-block;" data-i18n="tro.s2.tag">El Tiempo de Respuesta</span>
+
+        <div class="panel" style="margin-top: 1rem;">
+          <h3 data-i18n="tro.lat.h3">Velocidad vs. Precisión</h3>
+          <p data-i18n="tro.lat.body">
+            En el desarrollo de software, la velocidad importa. La experiencia del usuario
+            se degrada notablemente cuando las respuestas tardan más de 3-5 segundos.
+            Un RAG tradicional responde casi instantáneamente. Sin embargo, en un pipeline
+            avanzado cada capa de optimización añade latencia:
+          </p>
+        </div>
+
+        <div class="grid-3" style="margin-top: 1.5rem;">
+
+          <div class="panel">
+            <h3 data-i18n="tro.lat1.h3">Búsqueda Híbrida</h3>
+            <p data-i18n-html="tro.lat1.body">
+              Suma <strong>milisegundos</strong> al hacer dos búsquedas en paralelo
+              (vectorial + BM25) y luego combinar los resultados con RRF.
+              El impacto es mínimo pero medible en sistemas de alta escala.
+            </p>
+            <div class="formula" style="font-size: 0.75rem; padding: 0.75rem; margin-top: 0.75rem;">~+50ms - 150ms</div>
+          </div>
+
+          <div class="panel warning-top">
+            <h3 style="color: var(--warning);" data-i18n="tro.lat2.h3">Reranking</h3>
+            <p data-i18n-html="tro.lat2.body">
+              Requiere pasar los textos por un modelo neuronal pesado (Cross-encoder),
+              lo que puede tardar <strong>un par de segundos</strong>. Es el principal
+              cuello de botella del pipeline antes de CRAG.
+            </p>
+            <div class="formula" style="font-size: 0.75rem; padding: 0.75rem; margin-top: 0.75rem; border-color: rgba(255,170,34,0.3); color: var(--warning);">~+500ms - 2000ms</div>
+          </div>
+
+          <div class="panel danger-top">
+            <h3 style="color: var(--danger);" data-i18n="tro.lat3.h3">CRAG (peor caso)</h3>
+            <p data-i18n-html="tro.lat3.body">
+              Si decide que la información es incorrecta, tiene que detenerse, conectarse
+              a una API externa (Google Search / Tavily), descargar los resultados y volver
+              a leer. Es el <strong>más lento</strong> del pipeline.
+            </p>
+            <div class="formula" style="font-size: 0.75rem; padding: 0.75rem; margin-top: 0.75rem; border-color: rgba(255,34,68,0.3); color: var(--danger);">~+3000ms - 8000ms</div>
+          </div>
+
+        </div>
+
+        <div class="highlight" style="margin-top: 1.5rem;" data-i18n-html="tro.latNote.body">
+          <strong>El sacrificio por tener cero alucinaciones</strong> es que el usuario
+          tendrá que esperar más tiempo viendo un icono de "Cargando...". En aplicaciones
+          de tiempo real o alto volumen, este trade-off debe ser evaluado cuidadosamente
+          y puede requerir implementar streaming de respuestas o indicadores de progreso
+          para mejorar la percepción de velocidad del usuario.
+        </div>
+
+        <div class="zelda-box">
+          <div class="zelda-label" data-i18n="tro.z2.lbl">⊙ Analogía Sheikah</div>
+          <img src="../assets/img/analogy-latencia.jpg" alt="Analogía Latencia" style="width:100%;border-radius:4px;margin-bottom:1rem;display:block;">
+          <p data-i18n="tro.z2.p">
+            Link puede viajar ligero con una espada corta y atacar rapidísimo (RAG
+            tradicional). Pero si decide equiparse con la armadura de hierro más pesada,
+            un escudo gigante y un mandoble a dos manos (Pipeline Híbrido + Rerank + CRAG),
+            estará protegido contra casi cualquier daño (cero errores), pero sus movimientos
+            serán lentísimos y consumirán toda su barra de resistencia. La armadura completa
+            es correcta para el boss final, no para explorar el mapa abierto.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="container"><div class="divider"></div></div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TRADE-OFF 3: COSTE COMPUTACIONAL Y ECONÓMICO
+    ════════════════════════════════════════════════════════ -->
+    <section class="section">
+      <div class="container">
+
+        <div class="phase-header">
+          <span class="phase-watermark">03</span>
+          <span class="phase-title" data-i18n="tro.s3.title">Coste Computacional y Económico</span>
+        </div>
+
+        <span class="s-tag gold" style="margin-bottom: 1.25rem; display: inline-block;" data-i18n="tro.s3.tag">El Precio del Poder</span>
+
+        <div class="panel" style="margin-top: 1rem;">
+          <h3 data-i18n="tro.cost.h3">El doble coste de CRAG</h3>
+          <p data-i18n-html="tro.cost.body">
+            Evaluar si un documento es correcto (CRAG) a menudo implica hacer que un
+            LLM (como GPT-4 o Claude) actúe como juez <strong>antes</strong> de generar
+            la respuesta final. Esto significa que estás pagando el doble de tokens (dinero)
+            por cada pregunta del usuario: una llamada para el juicio y otra para la
+            respuesta. Además, mantener bases de datos vectoriales y modelos de Reranking
+            encendidos requiere servidores con GPUs costosas.
+          </p>
+        </div>
+
+        <div class="grid-2" style="margin-top: 1.5rem;">
+
+          <div class="panel">
+            <h3 data-i18n="tro.infra.h3">Costes de Infraestructura</h3>
+            <ul class="dot-list">
+              <li data-i18n-html="tro.infra.li1"><strong>Base de datos vectorial:</strong> Pinecone, Weaviate o Qdrant en producción requieren instancias dedicadas con costes mensuales fijos.</li>
+              <li data-i18n-html="tro.infra.li2"><strong>Modelo de Reranking:</strong> Un Cross-encoder de calidad (Cohere Rerank, BGE-Reranker) requiere GPU o llamadas API por petición.</li>
+              <li data-i18n-html="tro.infra.li3"><strong>Búsqueda web (CRAG):</strong> APIs como Tavily o SerpAPI cobran por consulta; un alto volumen puede generar facturas inesperadas.</li>
+            </ul>
+          </div>
+
+          <div class="panel warning-top">
+            <h3 data-i18n="tro.tok.h3">Costes de Tokens (LLM)</h3>
+            <ul class="dot-list">
+              <li data-i18n-html="tro.tok.li1"><strong>CRAG judge:</strong> Cada pregunta requiere al menos una llamada LLM extra para evaluar la relevancia del contexto antes de responder.</li>
+              <li data-i18n-html="tro.tok.li2"><strong>Contexto ampliado:</strong> Pasar Top-20 documentos al reranker o al evaluador consume más tokens de entrada que un RAG tradicional.</li>
+              <li data-i18n-html="tro.tok.li3"><strong>Double billing:</strong> En el peor caso (INCORRECTO), el sistema hace: llamada de evaluación + búsqueda web + llamada de generación.</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <div class="highlight" style="margin-top: 1.5rem;" data-i18n-html="tro.noAll.body">
+          <strong>No todas las preguntas necesitan este nivel de complejidad.</strong>
+          Usar este pipeline para preguntar "¿Cuál es el horario de la oficina?" es un
+          desperdicio de recursos. Un sistema bien diseñado implementa <em>enrutamiento
+          inteligente</em>: preguntas simples van a un RAG ligero, preguntas complejas
+          o de alto riesgo activan el pipeline completo.
+        </div>
+
+        <div class="panel cyan-top" style="margin-top: 1.5rem;">
+          <h3 data-i18n="tro.opt.h3">Buenas Prácticas de Optimización de Costes</h3>
+          <p style="margin-bottom: 0.75rem;" data-i18n="tro.opt.p">
+            Para controlar el gasto sin sacrificar calidad donde importa:
+          </p>
+          <ul class="dot-list">
+            <li data-i18n-html="tro.opt.li1">Usar modelos pequeños (GPT-3.5-turbo, Claude Haiku) como jueces de CRAG y reservar modelos grandes (GPT-4, Claude Sonnet/Opus) para la generación final.</li>
+            <li data-i18n-html="tro.opt.li2">Implementar caché de respuestas para preguntas frecuentes: si la misma pregunta ya fue respondida con alta faithfulness, reutilizar el resultado.</li>
+            <li data-i18n-html="tro.opt.li3">Definir umbrales de confianza: si el score del evaluador es muy alto (CORRECTO con 95%+ de confianza), saltar la búsqueda web directamente.</li>
+            <li data-i18n-html="tro.opt.li4">Monitorizar los costes por consulta y ajustar el Top K del retriever (pasar Top 5 en vez de Top 20 reduce el coste del Reranker significativamente).</li>
+          </ul>
+        </div>
+
+        <div class="zelda-box">
+          <div class="zelda-label" data-i18n="tro.z3.lbl">⊙ Analogía Sheikah</div>
+          <img src="../assets/img/analogy-coste.jpg" alt="Analogía Coste" style="width:100%;border-radius:4px;margin-bottom:1rem;display:block;">
+          <p data-i18n="tro.z3.p">
+            Las Flechas Ancestrales son el arma más poderosa del juego; desintegran al
+            enemigo al instante. Pero cuestan materiales rarísimos y muchísimas rupias.
+            Usar el pipeline completo de RAG para una pregunta trivial es como gastar
+            una Flecha Ancestral de 500 rupias para matar a un Bokoblin rojo de nivel 1.
+            Funciona, sí, pero acabará con el presupuesto del reino rápidamente.
+            Hay que saber cuándo usar las herramientas caras y cuándo basta con una
+            flecha normal.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── RESUMEN FINAL ─────────────────────────────────────── -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="s-tag cyan" data-i18n="tro.sum.tag">Resumen</span>
+          <h2 data-i18n="tro.sum.h2">La decisión de implementación</h2>
+        </div>
+
+        <div class="panel">
+          <h3 data-i18n="tro.bal.h3">El balance correcto</h3>
+          <p style="margin-bottom: 1rem;" data-i18n="tro.bal.p">
+            Las tres técnicas forman un pipeline que maximiza la calidad de las respuestas, pero
+            cada organización debe evaluar qué nivel de complejidad justifica su caso de uso
+            específico. No hay una respuesta única correcta.
+          </p>
+          <ul class="dot-list">
+            <li data-i18n-html="tro.bal.li1"><strong>Solo Búsqueda Híbrida:</strong> Ideal para sistemas con consultas técnicas frecuentes y base de datos estable. Alto impacto, bajo coste adicional.</li>
+            <li data-i18n-html="tro.bal.li2"><strong>Híbrida + Reranking:</strong> El punto óptimo para la mayoría de aplicaciones empresariales. Mejora significativa del MRR con latencia controlada.</li>
+            <li data-i18n-html="tro.bal.li3"><strong>Pipeline Completo (+ CRAG):</strong> Para aplicaciones críticas donde una alucinación tiene consecuencias graves: legal, médico, financiero, regulatorio.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PAGE NAV ─────────────────────────────────────────── -->
+    <div class="container">
+      <nav class="page-nav">
+        <a href="crag.html" data-i18n="tro.nav.prev">← CRAG</a>
+        <span class="page-nav-spacer"></span>
+      </nav>
+    </div>
+
+    <!-- ── FOOTER ───────────────────────────────────────────── -->
+    <footer class="footer">
+      <span class="footer-eye">⊙</span>
+      <p data-i18n="footer.text">Tableta Sheikah · Masterclass RAG · Técnicas de Optimización</p>
+    </footer>
+
+  </div><!-- /page-wrapper -->
+  <script src="../assets/js/i18n.js"></script>
+</body>
+</html>

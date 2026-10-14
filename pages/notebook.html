@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notebook · Tableta Sheikah RAG</title>
+  <link rel="stylesheet" href="../assets/css/main.css" />
+  <style>
+    .nb-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      border-radius: 6px;
+      padding: 2.5rem 2rem;
+      text-align: center;
+      max-width: 540px;
+      margin: 0 auto;
+    }
+    .nb-icon {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 1.25rem;
+      line-height: 1;
+    }
+    .nb-title {
+      font-family: var(--font-heading);
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text-bright);
+      margin-bottom: 0.5rem;
+    }
+    .nb-subtitle {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      margin-bottom: 1.5rem;
+    }
+    .nb-meta {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .nb-meta-item {
+      text-align: center;
+    }
+    .nb-meta-val {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      color: var(--gold-light);
+      margin-bottom: 0.2rem;
+    }
+    .nb-meta-lbl {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .btn-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-family: var(--font-heading);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 0.85rem 2.2rem;
+      border-radius: 3px;
+      border: 1px solid rgba(200,162,40,0.5);
+      background: rgba(200,162,40,0.1);
+      color: var(--gold-light);
+      text-decoration: none;
+      transition: all 0.25s ease;
+      cursor: pointer;
+    }
+    .btn-download:hover {
+      background: rgba(200,162,40,0.2);
+      box-shadow: 0 0 20px rgba(200,162,40,0.25);
+      border-color: rgba(200,162,40,0.7);
+    }
+    .nb-divider {
+      border: none;
+      border-top: 1px solid var(--border-gold);
+      margin: 2rem 0;
+      opacity: 0.3;
+    }
+    .nb-steps {
+      text-align: left;
+      margin-top: 0.5rem;
+    }
+    .nb-steps-title {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.85rem;
+    }
+    .nb-step {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      margin-bottom: 0.6rem;
+      font-size: 0.83rem;
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+    .nb-step-num {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--gold);
+      min-width: 18px;
+      margin-top: 0.15rem;
+    }
+    .nb-colab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-family: var(--font-heading);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 0.7rem 1.6rem;
+      border-radius: 3px;
+      border: 1px solid var(--border-cyan);
+      background: rgba(74,222,128,0.05);
+      color: var(--cyan);
+      text-decoration: none;
+      transition: all 0.25s ease;
+      margin-top: 0.5rem;
+    }
+    .nb-colab-btn:hover {
+      background: rgba(74,222,128,0.1);
+      box-shadow: 0 0 16px rgba(74,222,128,0.15);
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+
+    <!-- ── NAVIGATION ──────────────────────────────────────── -->
+    <nav class="nav">
+      <a class="nav-brand" href="../index.html">
+        <span class="nav-eye">⊙</span>
+        Tableta Sheikah · RAG
+      </a>
+      <ul class="nav-links">
+        <li><a href="../index.html" data-i18n="nav.home">Inicio</a></li>
+        <li><a href="hibrida.html" data-i18n="nav.hybrid">Híbrida</a></li>
+        <li><a href="reranking.html" data-i18n="nav.reranking">Reranking</a></li>
+        <li><a href="crag.html" data-i18n="nav.crag">CRAG</a></li>
+        <li><a href="tradeoffs.html" data-i18n="nav.tradeoffs">Trade-offs</a></li>
+        <li><a href="simulacion.html" data-i18n="nav.simulation">Simulación</a></li>
+        <li><a href="notebook.html" class="active" data-i18n="nav.notebook">Notebook</a></li>
+      </ul>
+      <button class="lang-toggle" onclick="setLang(document.documentElement.lang==='es'?'en':'es')" id="lang-btn">EN</button>
+    </nav>
+
+    <!-- ── PAGE HERO ───────────────────────────────────────── -->
+    <section class="page-hero">
+      <div class="container">
+        <nav class="breadcrumb">
+          <a href="../index.html" data-i18n="bc.home">Inicio</a>
+          <span class="sep">›</span>
+          <span class="current" data-i18n="bc.notebook">Notebook</span>
+        </nav>
+        <p class="hero-tag" data-i18n="nb.tag">Google Colab · Ejercicio Práctico</p>
+        <h1 data-i18n="nb.h1">Notebook de la Masterclass</h1>
+        <p class="subtitle" data-i18n="nb.sub">RAG Avanzado · Enciclopedia Hyliana</p>
+        <p class="intro" data-i18n="nb.intro">
+          Implementa desde cero las tres técnicas del pipeline: Búsqueda Híbrida,
+          Reranking y CRAG. Cada fase incluye código ejecutable, comentarios explicativos
+          y zonas de experimento donde puedes cambiar parámetros y observar el impacto.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── DOWNLOAD CARDS ────────────────────────────────────── -->
+    <section class="section" style="padding-top: 0;">
+      <div class="container">
+
+        <div style="display:flex; gap:1.5rem; justify-content:center; flex-wrap:wrap;">
+
+          <!-- SPANISH -->
+          <div class="nb-card" style="flex:1; min-width:280px; max-width:480px;">
+            <span class="nb-icon">⊙</span>
+            <div class="nb-title">RAG_Avanzado.ipynb</div>
+            <div class="nb-subtitle">Jupyter Notebook · Python 3 · Google Colab · Español</div>
+
+            <div class="nb-meta">
+              <div class="nb-meta-item">
+                <span class="nb-meta-val">~30</span>
+                <span class="nb-meta-lbl" data-i18n="nb.meta.min">minutos</span>
+              </div>
+              <div class="nb-meta-item">
+                <span class="nb-meta-val">3</span>
+                <span class="nb-meta-lbl" data-i18n="nb.meta.phases">fases</span>
+              </div>
+              <div class="nb-meta-item">
+                <span class="nb-meta-val">34</span>
+                <span class="nb-meta-lbl" data-i18n="nb.meta.cells">celdas</span>
+              </div>
+            </div>
+
+            <a class="btn-download" href="https://colab.research.google.com/drive/13wLva_bdauFDJeI2JqzUZET_hTNzzx86?usp=sharing" target="_blank" rel="noopener">
+              ⊙ <span data-i18n="nb.dl.es">Abrir en Colab · Español</span>
+            </a>
+          </div>
+
+          <!-- ENGLISH -->
+          <div class="nb-card" style="flex:1; min-width:280px; max-width:480px; border-color: var(--border-cyan);">
+            <span class="nb-icon">⊙</span>
+            <div class="nb-title">RAG_Advanced.ipynb</div>
+            <div class="nb-subtitle">Jupyter Notebook · Python 3 · Google Colab · English</div>
+
+            <div class="nb-meta">
+              <div class="nb-meta-item">
+                <span class="nb-meta-val">~30</span>
+                <span class="nb-meta-lbl" data-i18n="nb.meta.min">minutos</span>
+              </div>
+              <div class="nb-meta-item">
+                <span class="nb-meta-val">3</span>
+                <span class="nb-meta-lbl" data-i18n="nb.meta.phases">fases</span>
+              </div>
+              <div class="nb-meta-item">
+                <span class="nb-meta-val">34</span>
+                <span class="nb-meta-lbl" data-i18n="nb.meta.cells">celdas</span>
+              </div>
+            </div>
+
+            <a class="btn-download" href="https://colab.research.google.com/drive/1yf129T9BtVPSf_OO3pRcIu9FyCoylEjN?usp=sharing" target="_blank" rel="noopener" style="border-color: rgba(74,222,128,0.5); background: rgba(74,222,128,0.07); color: var(--cyan);">
+              ⊙ <span data-i18n="nb.dl.en">Open in Colab · English</span>
+            </a>
+          </div>
+
+        </div>
+
+        <!-- Steps (shared) -->
+        <div class="nb-card" style="margin-top:1.5rem;">
+          <div class="nb-steps">
+            <div class="nb-steps-title" data-i18n="nb.steps.title">Cómo usarlo en Google Colab</div>
+            <div class="nb-step">
+              <span class="nb-step-num">01</span>
+              <span data-i18n-html="nb.step1">Haz clic en el botón para abrir el notebook en <strong>Google Colab</strong>.</span>
+            </div>
+            <div class="nb-step">
+              <span class="nb-step-num">02</span>
+              <span data-i18n-html="nb.step2">Ve a <em>Archivo → Guardar una copia en Drive</em> para tener tu propia versión editable.</span>
+            </div>
+            <div class="nb-step">
+              <span class="nb-step-num">03</span>
+              <span data-i18n-html="nb.step3">Ejecuta las celdas en orden con <strong>Shift + Enter</strong>. La primera celda instala todas las dependencias automáticamente.</span>
+            </div>
+            <div class="nb-step">
+              <span class="nb-step-num">04</span>
+              <span data-i18n-html="nb.step4">En las <strong>Zonas de Experimento</strong> cambia los parámetros marcados y vuelve a ejecutar para ver cómo cambian los resultados.</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── PAGE NAV ─────────────────────────────────────────── -->
+    <div class="container">
+      <nav class="page-nav">
+        <a href="simulacion.html" data-i18n="nb.nav.prev">← Simulación</a>
+        <span></span>
+      </nav>
+    </div>
+
+    <!-- ── FOOTER ───────────────────────────────────────────── -->
+    <footer class="footer">
+      <span class="footer-eye">⊙</span>
+      <p data-i18n="footer.text">Tableta Sheikah · Masterclass RAG · Técnicas de Optimización</p>
+    </footer>
+
+  </div><!-- /page-wrapper -->
+  <script src="../assets/js/i18n.js"></script>
+</body>
+</html>
